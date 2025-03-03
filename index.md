@@ -16,7 +16,14 @@ By the end of this lab, you'll have hands-on experience with cloud-based databas
 
 ## Architecture
 
-TBD - need architecture diagram(s) or concept map(s). If the three labs are totally distinct, we need one for each.
+### Build a serverless, AI RAG application using data from Azure Cosmos DB: architecture diagram
+![Diagram depicts the architecture of a Copilot with Azure OpenAI Service, Azure CosmosDB for NoSQL and Azure App Service with Semantic Kernel](media/AzureCosmosDB-architecture.png)
+
+### Migrate an on-premises PostgreSQL server to Azure Database for PostgreSQL: architecture diagram
+![Diagram depicts the architecture for migrating an on-premises PostgreSQL server to Azure Database for PostgreSQL flexible server through a virtual gateway and Azure Virtual network (Vnet 1)](media/PostgreSQL-migration-architecture.png)
+
+### Integrate AI functionality into PostgreSQL
+![Diagram depicts the architecture for integrating GraphRag on Azure Database for PostgreSQL](media/PostgreSQL-AI-architecture.png)
 
 ## Exercises
 
@@ -32,6 +39,32 @@ The lab is available as GitHub pages here: [TechExcel: Win the Database Platform
 
 For running this lab you'll need:
 
- - Prerequisite TBD 
- - Prerequisite TBD
+**General requirements**
+- Azure Subscription with required roles & quotas
+- Microsoft Entra ID (Azure AD) for authentication
+- Internet access & network security setup
+- Azure Resource Requirements
+
+For **Exercise 02: Build a serverless, AI RAG application using data from Azure Cosmos DB**:
+- Azure Cosmos DB (NoSQL) with vector search
+- Azure OpenAI for GPT-based chat
+- .NET Aspire & AI orchestration
+
+For **Exercise 03: Migrate an on-premises PostgreSQL server to Azure Database for PostgreSQL**:
+- Azure PostgreSQL Flexible Server (v16)
+- Azure Virtual Network and VPN Gateway
+- Private DNS zone & SSL certificates for migration
+- Software & Tools
+- Visual Studio Code or Visual Studio 2022
+- .NET SDK (8.0+), .NET Aspire
+- Azure CLI and Azure Cosmos DB SDK
+- pgAdmin 4 and PostgreSQL CLI
+- Azure VPN Client & SSL Certificates for migration
+
+For **Exercise 04: Integrate AI functionality into PostgreSQL**:
+- Azure PostgreSQL Flexible Server
+- pgvector, azure_ai, and pg_diskann extensions
+- Azure OpenAI integration for AI queries
+
+
 
