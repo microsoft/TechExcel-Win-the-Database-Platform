@@ -42,24 +42,23 @@ For running this lab you'll need:
 **General requirements**
 - Azure Subscription with required roles & quotas
 - Microsoft Entra ID (Azure AD) for authentication
-- Internet access & network security setup
+- Internet access and network security setup
 - Azure Resource Requirements
 
 For **Exercise 02: Build a serverless, AI RAG application using data from Azure Cosmos DB**:
 - Azure Cosmos DB (NoSQL) with vector search
 - Azure OpenAI for GPT-based chat
-- .NET Aspire & AI orchestration
+- .NET Aspire and AI orchestration
 
 For **Exercise 03: Migrate an on-premises PostgreSQL server to Azure Database for PostgreSQL**:
 - Azure PostgreSQL Flexible Server (v16)
 - Azure Virtual Network and VPN Gateway
-- Private DNS zone & SSL certificates for migration
-- Software & Tools
+- Private DNS zone and SSL certificates for migration
 - Visual Studio Code or Visual Studio 2022
 - .NET SDK (8.0+), .NET Aspire
 - Azure CLI and Azure Cosmos DB SDK
 - pgAdmin 4 and PostgreSQL CLI
-- Azure VPN Client & SSL Certificates for migration
+- Azure VPN Client and SSL certificates for migration
 
 For **Exercise 04: Integrate AI functionality into PostgreSQL**:
 - Azure PostgreSQL Flexible Server
