@@ -33,7 +33,7 @@ This lab has the following exercises:
  - Migrate an on-premises PostgreSQL server to Azure Database for PostgreSQL
  - Integrate AI functionality into PostgreSQL
 
-The lab is available as GitHub pages here: [TechExcel: Win the Database Platform](https://microsoft.github.io/TechExcel-Win-the-Database-Platform/)
+The lab is available as GitHub pages here: [TechExcel: Win the Database Platform](https://aka.ms/AIDF_SS9294783_TEWintheDatabasePlatform_Lab_IOPage).
 
 ## Prerequisites
 
