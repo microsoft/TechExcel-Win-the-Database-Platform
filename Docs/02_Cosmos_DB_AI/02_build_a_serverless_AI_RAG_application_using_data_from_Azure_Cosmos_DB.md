@@ -17,6 +17,7 @@ In this exercise, you’ll build serverless, AI RAG applications using .NET Aspi
 
 ## Objectives
 
+After completing this lab, you'll be able to:
 -	Build serverless, AI RAG applications using .NET Aspire, Semantic Kernel, and Azure Cosmos DB with DiskANN and vector search.
 -	Design, build, deploy, and scale RAG pattern applications in Azure.
 
