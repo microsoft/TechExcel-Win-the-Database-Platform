@@ -14,6 +14,9 @@ By the end of this lab, you'll have hands-on experience with cloud-based databas
 
 ## Architecture
 
+### Azure SQL Managed Instance (TDB)
+![Diagram depicts ...TBD...](media/AzureCosmosDB-architecture.png)
+
 ### Build a serverless, AI RAG application using data from Azure Cosmos DB
 ![Diagram depicts the architecture of a Copilot with Azure OpenAI Service, Azure CosmosDB for NoSQL and Azure App Service with Semantic Kernel](media/AzureCosmosDB-architecture.png)
 
@@ -43,6 +46,11 @@ For running this lab you'll need:
 - Internet access and network security setup
 - Azure Resource Requirements
 
+For **Exercise 01: Set up and manage an SQL Managed Instance in Azure**:
+- ...
+- ...
+- ...TBD
+
 For **Exercise 02: Build a serverless, AI RAG application using data from Azure Cosmos DB**:
 - Azure Cosmos DB (NoSQL) with vector search
 - Azure OpenAI for GPT-based chat
@@ -62,6 +70,4 @@ For **Exercise 04: Integrate AI functionality into PostgreSQL**:
 - Azure PostgreSQL Flexible Server
 - pgvector, azure_ai, and pg_diskann extensions
 - Azure OpenAI integration for AI queries
-
-
 
