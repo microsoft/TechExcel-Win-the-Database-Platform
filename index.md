@@ -15,7 +15,7 @@ By the end of this lab, you'll have hands-on experience with cloud-based databas
 ## Architecture
 
 ### Azure SQL Managed Instance (TDB)
-![Diagram depicts ...TBD...](media/AzureCosmosDB-architecture.png)
+![Diagram depicts the architecture of an Azure Cloud with a Manged Instance link to an on premise SQL Server](media/SQL_MI_Azure_architecture.jpg)
 
 ### Build a serverless, AI RAG application using data from Azure Cosmos DB
 ![Diagram depicts the architecture of a Copilot with Azure OpenAI Service, Azure CosmosDB for NoSQL and Azure App Service with Semantic Kernel](media/AzureCosmosDB-architecture.png)
@@ -29,7 +29,7 @@ By the end of this lab, you'll have hands-on experience with cloud-based databas
 ## Exercises
 
 This lab has the following exercises:
-
+ - Set up, configure, and manage an SQL Managed Instance in Azure
  - Build a serverless, AI RAG application using data from Azure Cosmos DB 
  - Migrate an on-premises PostgreSQL server to Azure Database for PostgreSQL
  - Integrate AI functionality into PostgreSQL
