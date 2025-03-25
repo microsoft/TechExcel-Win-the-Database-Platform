@@ -14,7 +14,7 @@ By the end of this lab, you'll have hands-on experience with cloud-based databas
 
 ## Architecture
 
-### Azure SQL Managed Instance (TDB)
+### Azure SQL Managed Instance
 ![Diagram depicts the architecture of an Azure Cloud with a Manged Instance link to an on premise SQL Server](media/SQL_MI_Azure_architecture.jpg)
 
 ### Build a serverless, AI RAG application using data from Azure Cosmos DB
@@ -26,6 +26,9 @@ By the end of this lab, you'll have hands-on experience with cloud-based databas
 ### Integrate AI functionality into PostgreSQL
 ![Diagram depicts the architecture for integrating GraphRag on Azure Database for PostgreSQL](media/PostgreSQL-AI-architecture.png)
 
+### Implement generative AI with Azure SQL and REST endpoints
+![Diagram depicts the architecture for creating and storing embeddings in the Azure SQL Database](../../media/session-recommender-architecture.png)
+
 ## Exercises
 
 This lab has the following exercises:
@@ -33,6 +36,7 @@ This lab has the following exercises:
  - Build a serverless, AI RAG application using data from Azure Cosmos DB 
  - Migrate an on-premises PostgreSQL server to Azure Database for PostgreSQL
  - Integrate AI functionality into PostgreSQL
+ - Set up generative AI by integrating AI capabilities with an Azure SQL Database
 
 The lab is available as GitHub pages here: [TechExcel: Win the Database Platform](https://aka.ms/AIDF_SS9294783_TEWintheDatabasePlatform_Lab_IOPage).
 
@@ -47,9 +51,9 @@ For running this lab you'll need:
 - Azure Resource Requirements
 
 For **Exercise 01: Set up and manage an SQL Managed Instance in Azure**:
-- ...
-- ...
-- ...TBD
+- Azure Resource Group and VNet
+- SQL Server or VM Licensing
+- SQL Server Management Studio (SSM
 
 For **Exercise 02: Build a serverless, AI RAG application using data from Azure Cosmos DB**:
 - Azure Cosmos DB (NoSQL) with vector search
@@ -71,3 +75,9 @@ For **Exercise 04: Integrate AI functionality into PostgreSQL**:
 - pgvector, azure_ai, and pg_diskann extensions
 - Azure OpenAI integration for AI queries
 
+For **Exercise 05: Implement generative AI with Azure SQL and REST endpoints**:
+- Azure Subscription (Owner or Contributor permissions)
+- Azure SQL Database (Supports External REST Endpoint Invocation preview feature)
+- Azure OpenAI Resource (GPT-4, text-embedding-ada-002, DALL-E 3 models)
+- Azure AI Content Safety service
+- Visual Studio Code (with SQL extension)
