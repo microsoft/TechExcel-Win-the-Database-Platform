@@ -5,7 +5,7 @@ nav_order: 6
 has_children: true
 ---
 
-# Exercise 02: Implement generative AI with Azure SQL and REST endpoints
+# Exercise 05: Implement generative AI with Azure SQL and REST endpoints
 
 ## Scenario
 
