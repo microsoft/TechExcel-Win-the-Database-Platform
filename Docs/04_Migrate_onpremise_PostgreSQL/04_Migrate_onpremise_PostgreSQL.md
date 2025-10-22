@@ -1,11 +1,12 @@
 ---
-title: 'Exercise 03: Migrate an on-premises PostgreSQL server to Azure Database for PostgreSQL'
+title: 'Exercise 04: Migrate an on-premises PostgreSQL server to Azure Database for PostgreSQL'
 layout: default
-nav_order: 4 
+nav_order: 5
 has_children: true
 ---
 
-# Exercise 03: Migrate an on-premises PostgreSQL server to Azure Database for PostgreSQL
+# Exercise 04: Migrate an on-premises PostgreSQL server to Azure Database for PostgreSQL
+
 
 ## Scenario 
 
@@ -22,4 +23,4 @@ After completing this lab, you'll be able to:
 
 ## Duration 
 
-**Estimated Time:** 105 minutes
+**Estimated Time:** 165 minutes

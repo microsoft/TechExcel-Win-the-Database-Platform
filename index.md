@@ -53,7 +53,7 @@ For running this lab you'll need:
 For **Exercise 01: Set up and manage an SQL Managed Instance in Azure**:
 - Azure Resource Group and VNet
 - SQL Server or VM Licensing
-- SQL Server Management Studio (SSM
+- SQL Server Management Studio (SSM)
 
 For **Exercise 02: Build a serverless, AI RAG application using data from Azure Cosmos DB**:
 - Azure Cosmos DB (NoSQL) with vector search

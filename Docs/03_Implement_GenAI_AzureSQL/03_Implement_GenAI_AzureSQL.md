@@ -1,11 +1,12 @@
 ---
-title: 'Exercise 05: Implement generative AI with Azure SQL and REST endpoints'
+title: 'Exercise 03: Implement generative AI with Azure SQL and REST endpoints'
 layout: default
-nav_order: 6
+nav_order: 4
 has_children: true
 ---
 
-# Exercise 05: Implement generative AI with Azure SQL and REST endpoints
+# Exercise 03: Implement generative AI with Azure SQL and REST endpoints
+
 
 ## Scenario
 
@@ -24,15 +25,15 @@ After you complete this exercise, you'll be able to:
 
 ## Architecture
 
-### Create and store embeddings in the Azure SQL Database
+### Task 02: Create and store embeddings in the Azure SQL Database
 
 ![session-recommender-architecture.png](../../media/session-recommender-architecture.png)
 
-### Use vector search with vector functions
+### Task 03: Use vector search with vector functions
 
 ![vector-search-architecture-diagram-3-high-res.png](../../media/vector-search-architecture-diagram-3-high-res.png)
 
-### Use generative AI for recommendations, and generative AI for image generation and description
+### Task 05: Use generative AI for recommendations / Task 06: Use generative AI for image generation and description
 
 ![openai-end-to-end-aml-deployment.svg](../../media/openai-end-to-end-aml-deployment.svg)
 
