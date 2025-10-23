@@ -1,0 +1,1770 @@
+var instructionsProcessor = function () {
+
+    var cachedContainerId = null;
+    var $container = null;
+    var contentRootPath = null;
+    var proxyUrl = null;
+    var showDownInitialized = false;
+    var converter;
+    var dynamicVariables = [];
+    var definedVariables = null;
+    let isChildClient = false;
+
+    try {
+        isChildClient = window && window.parent && typeof window.parent.isClientWrapper === "function" && window.parent.isClientWrapper() === true;
+    } catch (ex) {
+        isChildClient = false;
+    }        
+
+    function initializeShowdown() {
+        if (showDownInitialized) return;
+        showdown.extension('instructionsInclude', function () {
+            return [{
+                type: 'listener',
+                listeners: {
+                    'images.after': function (event, text, options, globals) {
+                        //return text.replace(/!INSTRUCTIONS\s*\[((?:[^\]])*)\]\(([^\)]+)\)/ig, "\n<include data-name='$1' src='$2'></include>");
+                        //edit to allow one level of nested parenthesis to support @lab variables within the URL
+                        return text.replace(/!INSTRUCTIONS\s*\[((?:[^\]])*)\]\(((?:[^)(]|\((?:[^)(])*\))*)\)/ig, function (match, dataName, url) {
+                            url = url.replace(/@lab\.Variable\((")?([a-zA-Z0-9_-]+)\1\)/g, '@LAB-VARIABLE-$2');
+                            return "\n<include src='" + url + "' data-name='" + dataName + "'></include>";
+                        });
+                    }
+                }
+            }];
+        });
+        showdown.extension('instructionsDialogLink', function () {
+            return [{
+                type: 'listener',
+                listeners: {
+                    'images.after': function (event, text, options, globals) {
+                        return text.replace(/\^INSTRUCTIONS\s*\[((?:[^\]])*)\]\s*\(([^\)"]+)\s*(?:["'](.*)["'])?\)/ig, "\n<a class='dialogLink instructions icon-link' href='$2' title='$3'>$1</a>");
+                    }
+                }
+            }];
+        });
+        showdown.extension('ms_include', function () {
+            return [{
+                type: 'listener',
+                listeners: {
+                    'images.after': function (event, text, options, globals) {
+                        return text.replace(/\[!INCLUDE\s*\[((?:[^\]])*)\]\(([^\)]+)\)\]/ig, "\n<include data-name='$1' src='$2'></include>");
+                    }
+                }
+            }];
+        });
+        showdown.extension('typeTextAndCopyable', function () {
+            return [{
+                type: 'listener',
+                listeners: {
+                    'autoLinks.after': function (event, text, options, globals) {
+                        var replaceInlineEnclosures = function (markdownString, enclosureChar, enclosureLength, className) {
+                            var escapedEnclosureChar = enclosureChar.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+                            var greedySearch = new RegExp('(' + escapedEnclosureChar + '{' + enclosureLength + '})(\\S[^]+\\S|\\S+)(?=\\1)\\1', 'g');
+                            var ungreedySearch = new RegExp('(' + escapedEnclosureChar + '{' + enclosureLength + '})(\\S+|\\S[^]+?\\S)(?=\\1)\\1(?!\\S+?\\1)', 'g');
+                            var greedyMatch;
+                            if ((greedyMatch = greedySearch.exec(markdownString)) != null) {
+                                var ungreedyMatch;
+                                var ungreedyMatches = [];
+                                while ((ungreedyMatch = ungreedySearch.exec(markdownString)) != null) {
+                                    ungreedyMatches.push(ungreedyMatch);
+                                }
+                                var ungreedyMatchCount = ungreedyMatches.length;
+                                var firstUngreedyMatch = ungreedyMatches[0];
+                                var lastUngreedyMatch = ungreedyMatches[ungreedyMatches.length - 1];
+                                if ((ungreedyMatchCount == 1) ||
+                                    (firstUngreedyMatch.index != greedyMatch.index) ||
+                                    ((lastUngreedyMatch.index + lastUngreedyMatch[0].length) != (greedyMatch.index + greedyMatch[0].length))) {
+                                    return markdownString.substring(0, greedyMatch.index) + '<span class="' + className + '">' + greedyMatch[2] + '</span>' + markdownString.substring(greedyMatch.index + greedyMatch[0].length, markdownString.length);
+                                }
+                                var ungreedyReplaceResults = markdownString.substring(0, firstUngreedyMatch.index);
+                                for (var i = 0; i < ungreedyMatchCount; i++) {
+                                    var copyToIndex;
+                                    ungreedyMatch = ungreedyMatches[i];
+                                    if (i < ungreedyMatchCount - 1) {
+                                        copyToIndex = ungreedyMatches[i + 1].index;
+                                    } else {
+                                        copyToIndex = markdownString.length;
+                                    }
+                                    ungreedyReplaceResults += '<span class="' + className + '">' + ungreedyMatch[2] + '</span>' + markdownString.substring(ungreedyMatch.index + ungreedyMatch[0].length, copyToIndex);
+                                }
+                                return ungreedyReplaceResults;
+                            }
+                            return markdownString;
+                        };
+                        var processChunks = function (chunk, enclosureChar, enclosureLength, className) {
+                            // create a variable to store the return string
+                            var resultString = '';
+                            // split on any HTML tags to break the string up into chunks
+                            var chunkSegments = chunk.split(/(<([^ >]+)[^>]*?>.+?<\/\2>)/g);
+                            for (var i = 0; i < chunkSegments.length; i++) {
+                                var chunkSegment = chunkSegments[i];
+                                // leave whitespace segments as is
+                                if (chunkSegment.match(/^\s*$/g) !== null) {
+                                    resultString += chunkSegment;
+                                    continue;
+                                }
+                                // leave HTML segments as is, and skip the next item because it's the HTML tag itself
+                                if (chunkSegment.match(/^<([^ >]+)[^>]*?>.+?<\/\1>$/g) !== null) {
+                                    i++;
+                                    resultString += chunkSegment;
+                                    continue;
+                                }
+                                // replace enclosures in non-span segments
+                                resultString += replaceInlineEnclosures(chunkSegment, enclosureChar, enclosureLength, className);
+                            }
+                            return resultString;
+                        };
+                        var bothReplaced = processChunks(text, '+', 4, 'copyable typeText');
+                        var typeTextReplaced = processChunks(bothReplaced, '+', 3, 'typeText');
+                        var copyableReplaced = processChunks(typeTextReplaced, '+', 2, 'copyable');
+                        return copyableReplaced;
+                    }
+                }
+            }];
+        });
+        showdown.extension('youtubevideo', function () {
+            return [{
+                type: 'listener',
+                listeners: {
+                    'images.after': function (event, text, options, globals) {
+                        var link = text.replace(/!VIDEO\s*\[((?:[^\]])*)\]\s*\(([^\)"]+(?:youtube\.com|youtu\.be)[^\)"]+)\s*(?:["'](.*)["'])?\)/ig, "\n<div style='position:relative; height:0; padding-bottom:56.21%' class='youTubeVideo' title='$1'><iframe src='$2?enablejsapi=1' title='$1' style='position:absolute;width:100%;height:100%;' frameborder='0' allowfullscreen></iframe></div>");
+                        link = link.replace("/watch?v=", "/embed/");
+                        link = link.replace("//youtu.be/", "//www.youtube.com/embed/");
+                        //link += "";
+                        return link;
+                    }
+                }
+            }];
+        });
+        showdown.extension('video', function () {
+            return [{
+                type: 'listener',
+                listeners: {
+                    'images.after': function (event, text, options, globals) {
+                        return text.replace(/!VIDEO\s*\[((?:[^\]])*)\]\s*\(([^\)"]+)\s*(?:["'](.*)["'])?\)/ig, function (g1, g2, g3, g4, g5) {
+                            src = g3.replace(/^\s+|\s+$/gm, '');
+                            src = getContentUrl(src, contentRootPath);
+                            var html = "\n<video src='" + src + "'"; //not currently using g2, which is typically a link text or image alt
+                            if (g4) {
+                                html += " title='" + g4 + "'";
+                            }
+                            html += " controls />";
+                            return html;
+                        });
+                    }
+                }
+            }];
+        });
+        showdown.extension('audio', function () {
+            return [{
+                type: 'listener',
+                listeners: {
+                    'images.after': function (event, text, options, globals) {
+                        return text.replace(/!AUDIO\s*\[((?:[^\]])*)\]\s*\(([^\)"]+)\s*(?:["'](.*)["'])?\)/ig, function (g1, g2, g3, g4, g5) {
+                            src = g3.replace(/^\s+|\s+$/gm, '');
+                            src = getContentUrl(src, contentRootPath);
+                            var html = "\n<audio src='" + src + "'"; //not currently using g2, which is typically a link text or image alt
+                            if (g4) {
+                                html += " title='" + g4 + "'";
+                            }
+                            html += " controls />";
+                            return html;
+                        });
+                    }
+                }
+            }];
+        });
+        showdown.extension('image', function () { //this handles !IMAGE and GFM image syntax. We cannot rely on Showdown to handle GFM images because showdown doesn't suppot whitespaces in URLs, which occur a lot in the wild.
+            return [{
+                type: 'listener',
+                listeners: {
+                    'images.before': function (event, text, options, globals) {
+                        return text.replace(/(?:!IMAGE|!)\s*\[((?:[^\]])*)\]\s*\(([^\)"]+)\s*(?:["'](.*)["'])?\)(?:{([^}]+)})?/ig, function (g1, g2, g3, g4, g5) {
+                            src = g3.replace(/^\s+|\s+$/gm, '');
+                            src = getContentUrl(src, contentRootPath);
+                            var html = "\n<img src='" + src + "'";
+                            if (g2) {
+                                let alt = g2;
+                                g2.replace(/\s?\{(\d+)(?:x(\d+))?\}?$/i, function (alt1, alt2, alt3) {
+                                    alt = g2.replace(alt1, "");
+                                    if (alt2 > 0 && alt3 > 0) {
+                                        html += "style='width:" + parseInt(alt2) + "px; height:" + parseInt(alt3) + "px'";
+                                    }
+                                    else if (alt2 > 0) {
+                                        html += "style='width:" + parseInt(alt2) + "px;'";
+                                    }
+                                });
+                                html += " alt='" + alt + "'";
+                            }
+                            if (g4) {
+                                html += " title='" + g4 + "'";
+                            }
+                            if (g5) {
+                                if (!isNaN(g5)) {
+                                    html += "style='width:" + g5 + "px'";
+                                } else if (g5.toLowerCase().indexOf("x") > 0) {
+                                    var dimensions = g5.toLowerCase().split("x");
+                                    if (dimensions.length > 1) {
+                                        var width = dimensions[0].trim();
+                                        var height = dimensions[1].trim();
+                                        html += "style='width:" + width + "px; height:" + height + "px'";
+                                    }
+                                }
+                            }
+                            html += "/>";
+                            return html;
+                        });
+                    }
+                }
+            }];
+        });
+        showdown.extension('link', function () {
+            return [{
+                type: 'listener',
+                listeners: {
+                    'images.after': function (event, text, options, globals) {
+                        let regex = /([\^|\<]\s*)?((?:VIDEO|AUDIO|IMAGE|HELP|HINT|KNOWLEDGE|FILE)\s*)?\[((?:[^\]])*)\]\s*\(([^\)"']+)\s*((["'])([^\)"']+)(?:\6))?\s*\)/ig;
+                        return text.replace(regex, function (g1, g2, g3, g4, g5, g6, g7, g8) {
+                            let url = g5;
+                            let isVariableLink = false;
+                            if (g5.indexOf("variable-") == 0) {
+                                isVariableLink = true;
+                            } else {
+                                url = getContentUrl(url, contentRootPath);
+                            }
+                            if (url) { url = url.trim(); }
+                            let isExternalLink = url.indexOf("#") !== 0 && url.indexOf("mailto:") !== 0;
+                            let isIconLink = false;
+                            let html = "<a";
+                            if (g2 || g3 || isVariableLink || isExternalLink) {
+                                html += " class='";
+                                if (g2) {
+                                    if (g2.indexOf("^") === 0) {
+                                        html += "dialogLink ";
+                                        isIconLink = true;
+                                    } else if (g2.indexOf("<") === 0) {
+                                        html += "portalLink ";
+                                        isIconLink = true;
+                                    }
+                                }
+                                if (g3) {
+                                    isIconLink = true;
+                                    if (/video/i.test(g3)) {
+                                        html += "videoLink";
+                                    } else if (/audio/i.test(g3)) {
+                                        html += "audioLink";
+                                    } else if (/image/i.test(g3)) {
+                                        html += "imageLink";
+                                    } else if (/hint/i.test(g3)) {
+                                        html += "hintLink";
+                                    } else if (/help/i.test(g3)) {
+                                        html += "helpLink";
+                                    } else if (/knowledge/i.test(g3)) {
+                                        html += "knowledgeLink";
+                                    } else if (/file/i.test(g3)) {
+                                        html += "fileLink"
+                                    }
+                                } else if (isExternalLink && g4.indexOf("<img") == -1) {
+                                    html += "icon-link external-link"
+                                }
+                                if (isVariableLink) {
+                                    html += " variable-link"
+                                }
+                                if (isIconLink) {
+                                    html += " icon-link"
+                                }
+                                html += "'";
+                            }
+                            if (isVariableLink) {
+                                html += " href='#'";
+                                html += `data-variable=${g5.replace("variable-", "")}`;
+                            } else {
+                                html += " href='" + url + "'";
+                            }
+                            if (g8) {
+                                html += " title='" + g8 + "'";
+                            }
+                            if (isExternalLink) {
+                                html += ` target='_blank' aria-label='(opens a new window)'`;
+                            }
+                            html += ">" + g4 + "</a>";
+                            return html;
+                        });
+                    }
+                }
+            }];
+        });
+
+        var referenceLinks = null;
+
+        showdown.extension('referenceLink', function () {
+            return [
+                {
+                    type: 'lang', //we have to do this early in the processing to capture all the references
+                    filter: function (text, converter, options) {
+                        referenceLinks = [];
+                        var regex = /(>)?[^\S\n]*\[([a-zA-Z0-9_-]+)\]:\s*([^"'\r\n\s]+)/g;
+                        var m;
+                        while (m = regex.exec(text)) {
+                            if (m[1] && m[1].substring(0, 1) == ">") {
+                                continue; //we do not want to capture link refereces within a blockquote.
+                            }
+                            referenceLinks.push({ name: m[2], url: m[3] });
+                        }
+                        return text;
+                    }
+                },
+                {
+                    type: 'listener',
+                    listeners: {
+                        'images.after': function (event, text, options, globals) {
+                            return text.replace(/([\^|\<|\!]\s*)?((?:VIDEO|AUDIO|IMAGE|HELP|HINT|KNOWLEDGE|FILE|INSTRUCTIONS)\s*)?\[((?:[^\]])*)\]\s*\[([^\]]+)\]/ig, function (g1, g2, g3, g4, g5) {
+                                //g3 is the link modifier type
+                                //g4 is the link text
+                                //g5 is the reference name                               
+                                var url = null;
+                                for (var i = 0, numRefs = referenceLinks.length; i < numRefs; i++) {
+                                    if (referenceLinks[i].name == g5) {
+                                        url = referenceLinks[i].url;
+                                        break;
+                                    }
+                                }
+                                if (g2 == "!" && g3 == "INSTRUCTIONS") {
+                                    return url == null
+                                        ? "\n<div class='instructionsblock' data-name='" + g4 + "' ref='" + g5 + "'></div>"
+                                        : "\n<include data-name='" + g4 + "'src='" + url + "'></include>";
+                                }
+                                var html = "<a";
+                                if (g2 || g3) {
+                                    html += " class='icon-link ";
+                                    if (g2) {
+                                        if (g2.indexOf("^") === 0) {
+                                            html += "dialogLink ";
+                                        } else if (g2.indexOf("<") === 0) {
+                                            html += "portalLink ";
+                                        }
+                                    }
+                                    if (g3) {
+                                        if (/video/i.test(g3)) {
+                                            html += "videoLink";
+                                        } else if (/audio/i.test(g3)) {
+                                            html += "audioLink";
+                                        } else if (/image/i.test(g3)) {
+                                            html += "imageLink";
+                                        } else if (/hint/i.test(g3)) {
+                                            html += "hintLink";
+                                        } else if (/knowledge/i.test(g3)) {
+                                            html += "knowledgeLink";
+                                        } else if (/file/i.test(g3)) {
+                                            html += "fileLink";
+                                        }
+                                    }
+                                    html += "'";
+                                }
+                                if (url) {
+                                    html += " href='" + url + "'";
+                                } else {
+                                    html += " href='#' data-target='" + g5 + "'";
+                                }
+                                html += " target='_blank'>" + g4 + "</a>";
+                                return html;
+                            });
+                        }
+                    }
+                }
+            ];
+        });
+
+        showdown.extension('tip', function () {
+            return [{
+                type: 'listener',
+                listeners: {
+                    'images.after': function (event, text, options, globals) {
+                        return text.replace(/\[((?:[^\]])*)\]\s*\(\s*"([^"]+)"\s*\)/g, "\n<a class='tipLink' target='_blank' href='#'>$1</a><span class='tipContent' style='display:none;'>$2</span>");
+                    }
+                }
+            }];
+        });
+
+        showdown.extension('pagebreak', function () {
+            return [{
+                type: 'lang',
+                filter: function (text, converter, options) {
+                    return text.replace(/^(\s{0,3})(= ?){3,}\s*$/gm, "\n<hr class='pagebreak'/>");
+                }
+            }];
+        });
+
+        showdown.extension('commandReferences', function () {
+            return [{
+                type: 'lang',
+                filter: function (text, converter, options) {
+                    return text
+                        .replace(/^\[([^\]]+)\]:\s*(?:^|\n)(```+|~~~+)([^\s`~]*)\n([\s\S]*?)\n\2/gm, "<div class='command' data-id='$1'><textarea>$4</textarea></div>") //for code blocks
+                        .replace(/^\[([^\]]+)\]:\s*`([^`]+)`/gm, "<div class='command' data-id='$1'><textarea>$2</textarea></div>"); //for inline code span
+                }
+            }];
+        });
+        showdown.extension('commandReferenceLinks', function () {
+            return [{
+                type: 'listener',
+                listeners: {
+                    'images.after': function (event, text, options, globals) {
+                        return text.replace(/\@\s*\[((?:[^\]])*)\]\s*\[([^\]]+)\](?:{([^}]+)})?/g, "\n<a class='commandLink special-action-link' target='_blank' href='#' data-target='$2' data-options='$3'>$1</a>");
+                    }
+                }
+            }];
+        });
+        showdown.extension('inlineCommandLinks', function () {
+            return [{
+                type: 'listener',
+                listeners: {
+                    'blockQuotes.before': function (event, text, options, globals) {
+                        return text.replace(/\@\s*\[((?:[^\]])*)\]\s*\(`([^`]+)`\)(?:{([^}]+)})?/g, function (match, m1, m2, m3) {
+                            return "\n<a class='commandLink special-action-link' target='_blank' href='#' data-options='" + m3 + "'>" + m1 + "</a><input type='hidden' class='command' value='" + encodeURIComponent(m2) + "' />";
+                        });
+                    }
+                }
+            }];
+        });
+
+        showdown.extension('sections-preprocess', function () {
+            return [{
+                type: 'lang',
+                filter: function (text, converter, options) {
+                    return text.replace(/^:::(?:\s*)(\S+)(?:\s*)({.*})?[\n\r]([\s\S]*?):::\s*\n/gm, function (match, className, options, content) {
+                        var matches = className.match(/(\S+)\((\S+)\s*=\s*(\S+)\)/);
+                        if (matches) {
+                            var variableName = matches[2];
+                            var variableValue = matches[3];
+                            if (isNewVariableName(variableName)) {
+                                dynamicVariables.push({ name: variableName });
+                            }
+                            return '\n<!--SECTION class="' + matches[1] + ' ' + 'display-by-variable" data-variable-name="' + variableName + '" data-variable-value="' + variableValue + '"-->\n' + content + '\n<!--ENDSECTION-->\n';
+                        } else {
+                            return '\n<!--SECTION class="' + className + '"-->\n' + content + '\n<!--ENDSECTION-->\n';
+                        }
+                    });
+                }
+            }];
+        });
+
+        showdown.extension("sections-postprocess", function () {
+            "use strict";
+            return [
+                {
+                    type: "output",
+                    filter: function (text, converter, options) {
+                        return text
+                            .replace(/<!--SECTION class="([^"]+)"( data-variable-name="[^"]+")?( data-variable-value="[^"]+")?-->/gm, "<div class='$1' $2 $3>")
+                            .replace(/<!--ENDSECTION-->/gm, "</div>");
+                    }
+                }
+            ];
+        });
+
+        showdown.extension('activities', function () {
+            return [{
+                type: 'listener',
+                listeners: {
+                    'blockQuotes.before': function (event, text, options, globals) {
+                        text = text.replace(/@lab\.ActivityGroup\(([a-zA-Z0-9_-]+)\)/g, '<div class="activityGroup" data-alias="$1"></div>');
+                        return text.replace(/@lab\.Activity\(([a-zA-Z0-9_-]+)\)/g, '<div class="activity" data-alias="$1"></div>');
+                    }
+                }
+            }];
+        });
+
+        showdown.extension('variables', function () {
+            return [
+                {
+                    type: 'output',
+                    filter: function (text, converter, options) {
+                        let output = text.replace(/@lab\.TextBox\((")?([a-zA-Z0-9_-]+)\1\)/g, function (match, quotes, name) {
+                            if (isNewVariableName(name)) {
+                                dynamicVariables.push({ name: name });
+                            }
+                            return '<input type="text" class="variableTextBox" data-name="' + name + '" maxlength="500" />';
+                        });
+                        output = output.replace(/@lab\.MaskedTextBox\((")?([a-zA-Z0-9_-]+)\1\)/g, function (match, quotes, name) {
+                            if (isNewVariableName(name)) {
+                                dynamicVariables.push({ name: name });
+                            }
+                            return '<input type="password" class="variableTextBox" data-name="' + name + '" maxlength="500" />';
+                        });
+                        output = output.replace(/@lab\.EssayTextBox\((")?([a-zA-Z0-9_-]+)\1\)(?:\[(.+?)\])?/g, function (match, quotes, name, height) {
+                            if (isNewVariableName(name)) {
+                                dynamicVariables.push({ name: name });
+                            }
+                            var style = `${(height ? `rows="${height}"` : '')}`;
+                            return `<textarea class="variableTextBox" data-name="${name}" maxlength="5000" ${style} />`;
+                        });
+                        output = output.replace(/@lab\.DropDownList\((")?([a-zA-Z0-9_-]+)\1\)\[((.+?)(?:,\s*|))\]/g, function (match, quotes, name, values) {
+                            if (isNewVariableName(name)) {
+                                dynamicVariables.push({ name: name });
+                            }
+                            var listHtml = '<select type="text" class="variableDropDownList" data-name="' + name + '">';
+                            vals = values.split(",");
+                            for (var j = 0; j < vals.length; j++) {
+                                listHtml += "<option value='" + vals[j] + "'>" + vals[j] + "</option>";
+                            }
+                            listHtml += "</select>";
+                            return listHtml;
+                        });
+                    return output.replace(/(?<!=["'])@lab\.Variable\((")?([a-zA-Z0-9_-]+)\1\)/g, function (match, r1, name) { // Negative look behind to make sure variable isn't used inside of an HTML attribute
+                            if (isNewVariableName(name)) {
+                                dynamicVariables.push({ name: name });
+                            }
+                            return '<span class="variable" data-name="' + name + '">&lt;' + name + '&gt;</span>';
+                        });
+                    }
+                }
+            ];
+        });
+
+        showdown.extension('keyCombo', function () {
+            return [
+                {
+                    type: 'listener',
+                    listeners: {
+                        'blockQuotes.before': function (event, text, options, globals) {
+                            return text.replace(/@lab\.KeyCombo\((")?([a-zA-Z0-9+_-\s]+?)\1\)\[((.+?)(?:,\s*|))\]/g, function (match, quotes, text, values) {
+                                return '<a href="#" class="keyComboLink icon-link special-action-link" data-keys="' + values + '">' + text + '</a>';
+                            });
+                        }
+                    }
+                }
+            ];
+        });
+
+        showdown.extension('container-terminals', function () {
+            return [{
+                type: 'listener',
+                listeners: {
+                    'blockQuotes.before': function (event, text, options, globals) {
+                        return text.replace(/@lab\.Container\(([a-zA-Z0-9_-]+)\)\.Terminal(?:{([^}]+)})?/g, function (g1, g2, g3) {
+                            if (g3) {
+                                var html = '<div class="container-terminal" data-id="' + g2 + '"';
+                                if (!isNaN(g3)) {
+                                    html += "style='height:" + (parseInt(g3) * 13.5) + "px'";
+                                } else if (g3.toLowerCase().indexOf("x") > 0) {
+                                    var dimensions = g3.toLowerCase().split("x");
+                                    if (dimensions.length > 1) {
+                                        var cols = parseInt(dimensions[0].trim());
+                                        var rows = parseInt(dimensions[1].trim());
+                                        html += "style='width:" + ((cols + 1) * 7.203125) + "px; height:" + (rows * 13.5) + "px'";
+                                    }
+                                }
+                                return html += '></div>'
+                            }
+                            return '<div class="container-terminal" data-id="' + g2 + '" style="height:200px;"></div>';
+                        });
+                    }
+                }
+            }];
+        });  
+
+        showdown.extension('expandableBlockquoteModifiersBefore', function () {
+            return [{
+                type: 'listener',
+                listeners: {
+                    'blockQuotes.before': function (event, text, options, globals) {
+                        return text
+                            .replace(/^>\s*\[\+((?:ALERT|HINT|HELP|NOTE)?)\]/igm, function (g1, g2) {
+                                return `<!--${g2.toUpperCase()}EXPANDABLE-->\n>`;
+                            });
+                    }
+                }
+            }];
+        });
+
+        showdown.extension("expandableBlockquoteModifiersAfter", function () {
+            "use strict";
+            return [
+                {
+                    type: "output",
+                    filter: function (text, converter, options) {
+                        let result = "";
+                        let lastIndex = 0;
+                        const expandableBlockquoteRegex = /<!--((?:ALERT|HINT|HELP|NOTE)?)EXPANDABLE-->\s*<blockquote>/g;
+
+                        text.replace(expandableBlockquoteRegex, function (match, type, offset) {
+                            const start = offset + match.length;
+                            let depth = 1;
+                            let end = start;
+
+                            // Find the closing blockquote tag
+                            while (depth > 0 && end < text.length) {
+                                const nextBlockquoteStart = text.indexOf("<blockquote>", end);
+                                const nextBlockquoteEnd = text.indexOf("</blockquote>", end);
+
+                                if (nextBlockquoteStart === -1 && nextBlockquoteEnd === -1) {
+                                    break; // No more blockquote tags, break loop
+                                }
+
+                                if (nextBlockquoteStart !== -1 && (nextBlockquoteStart < nextBlockquoteEnd || nextBlockquoteEnd === -1)) {
+                                    depth++;
+                                    end = nextBlockquoteStart + 12; // 12 = length of <blockquote>
+                                } else {
+                                    depth--;
+                                    end = nextBlockquoteEnd + 13; // 13 = length of </blockquote>
+                                }
+                            }
+
+                            const fullBlockquote = text.slice(offset, end);
+                            let innerContent = fullBlockquote
+                                .replace(/<!--((?:ALERT|HINT|HELP|NOTE)?)EXPANDABLE-->\s*<blockquote>/, "") // Remove start tag
+                                .replace(/<\/blockquote>$/, ""); // Remove end tag
+
+                            // Extract the first paragraph as the summary
+                            const summaryMatch = innerContent.match(/<p>([\s\S]*?)<\/p>/);
+                            const summary = summaryMatch ? summaryMatch[1] : "";
+                            innerContent = innerContent.replace(summaryMatch ? summaryMatch[0] : "", ""); // Remove title (summary) from remaining content
+
+                            // Append any text before the match (in case there's anything before the start of the expandable blockquote)
+                            result += text.slice(lastIndex, offset);
+                            result += `<blockquote class="expandable ${type.toLowerCase()}">
+                                <details>
+                                    <summary>${summary}</summary>
+                                    ${innerContent}
+                                </details>
+                            </blockquote>`;
+
+                            lastIndex = end;
+
+                            return "";
+                        });
+
+                        // Append the remaining text after the last match (in case there's anything after the end of the expandable blockquote)
+                        result += text.slice(lastIndex);
+
+                        return result;
+                    }
+                }
+            ];
+        });
+
+        showdown.extension('blockquoteModifiersBefore', function () {
+            return [{
+                type: 'listener',
+                listeners: {
+                    'blockQuotes.before': function (event, text, options, globals) {
+                        return text
+                            .replace(/^>\s*\[([^\]]+)\]:/igm, "<!--REFERENCECONTENT id=\"$1\"-->\n>")
+                            .replace(/^>\s*\[!ALERT\]/igm, "<!--ALERT-->\n>")
+                            .replace(/^>\s*\[!IMPORTANT\]/igm, "<!--ALERT-->\n>")
+                            .replace(/^>\s*\[!WARNING\]/igm, "<!--ALERT-->\n>")
+                            .replace(/^>\s*\[!KNOWLEDGE\]/igm, "<!--KNOWLEDGE-->\n>")
+                            .replace(/^>\s*\[!HELP\]/igm, "<!--HELP-->\n>")
+                            .replace(/^>\s*\[!HINT\]/igm, "<!--HINT-->\n>")
+                            .replace(/^>\s*\[!TIP\]/igm, "<!--HINT-->\n>")
+                            .replace(/^>\s*\[!NOTE\]/igm, "<!--NOTE-->\n>");
+                    }
+                }
+            }];
+        });
+
+        showdown.extension("blockquoteModifiersAfter", function () {
+            "use strict";
+            return [
+                {
+                    type: "output",
+                    filter: function (text, converter, options) {
+                        return text
+                            .replace(/<!--REFERENCECONTENT id="([^"]+)"-->\s*<blockquote>/gm, "<blockquote class='referenceContent' style='display:none;' data-id='$1'>")
+                            .replace(/<!--ALERT-->\s*<blockquote>/gm, "<blockquote class='alert'>")
+                            .replace(/<!--KNOWLEDGE-->\s*<blockquote>/gm, "<blockquote class='knowledge'>")
+                            .replace(/<!--HELP-->\s*<blockquote>/gm, "<blockquote class='help'>")
+                            .replace(/<!--HINT-->\s*<blockquote>/gm, "<blockquote class='hint'>")
+                            .replace(/<!--NOTE-->\s*<blockquote>/gm, "<blockquote class='note'>");
+                    }
+                }
+            ];
+        });
+
+        showdown.extension('ai', function () {
+            return [{
+                type: 'listener',
+                listeners: {
+                    'images.after': function (event, text, options, globals) {
+                        return text.replace(/ai(?:-menu)?\s*\[((?:[^\]])*)\](?:\s*({[^}]+}))?/ig, function (g1, g2, g3, g4, g5) {
+                            let linkText = g2.trim();
+                            let properties = g3 ? encodeURIComponent(g3.trim()) : "";
+                            if (properties && properties.length > 0) {
+                                return `<a href="#" class="ai-completion-prompt special-action-link" data-prompt="${properties}">${linkText}</a>`;
+                            }
+                            return `<a href="#" class="ai-completion-prompt special-action-link">${linkText}</a>`;
+                        });
+                    }
+                }
+            }];
+        });
+
+        showdown.extension('ai-chat', function () {
+            return [{
+                type: 'listener',
+                listeners: {
+                    'images.after': function (event, text, options, globals) {
+                        return text.replace(/ai-chat\s*\[((?:[^\]])*)\](?:\s*({[^}]+}))?/ig, function (g1, g2, g3, g4, g5) {
+                            let topicTrimmed = g2.trim();
+                            let topicEncoded = replaceAll(topicTrimmed, "\"", `&quot;`, false);
+                            let parameters = g3 ? encodeURIComponent(g3.trim()) : "";
+                            let html = `<div class="ai-chat" data-topic="${topicEncoded}"`;
+                            if (parameters && parameters.length > 0) {
+                                html += ` data-parameters="${parameters}"`;
+                            }
+                            return html + `><div class="ai-chat-header primary-color-background"><span class="topic">${topicTrimmed}</span><a href="#" class="suggest-topics">Suggest topics</a><div class="buttons" style="display:none;"><span class="collapse" title="Collapse"></span><span class="clear" title="Clear this conversation"></span></div></div><div class="ai-output accent-background" style="display:none;"></div><div class="ai-input-wrapper accent-background-2"><textarea class="ai-input" placeholder="Ask a question..." rows="1"></textarea><span class="ai-submit-wrapper"><input type="button" class="ai-submit primary" value="&#8679;"/></span></div></div>`;
+                        });
+                    }
+                }
+            }];
+        });
+
+        showdown.extension('ai-content', function () {
+            return [{
+                type: 'listener',
+                listeners: {
+                    'images.after': function (event, text, options, globals) {
+                        return text.replace(/ai-(teach|show|quiz|resources)\s*\[((?:[^\]])*)\](?:\s*({[^}]+}))?/ig, function (g1, g2, g3, g4) {
+                            let type = g2;
+                            let topic = g3.trim();
+                            let prompt = g4 ? encodeURIComponent(g4.trim()) : "";
+                            let html = `<div class="ai-content" data-topic="${topic}" data-type="${type}"`;
+                            if (prompt && prompt.length > 0) {
+                                html += ` data-prompt="${prompt}"`;
+                            }
+                            html += "></div>";
+                            return html;
+                        });
+                    }
+                }
+            }];
+        });
+
+        showdown.extension('ai-practice', function () {
+            return [{
+                type: 'listener',
+                listeners: {
+                    'images.after': function (event, text, options, globals) {
+                        return text.replace(/ai-practice\s*\[((?:[^\]])*)\](?:\s*({[^}]+}))?/ig, function (g1, g2, g3) {
+                            let topicTrimmed = g2.trim();
+                            let topicEncoded = replaceAll(topicTrimmed, "\"", `&quot;`, false);
+                            let parameters = g3 ? encodeURIComponent(g3.trim()) : "";
+                            let html = `<div class="ai-practice" data-topic="${topicEncoded}"`;
+                            if (parameters && parameters.length > 0) {
+                                html += ` data-parameters="${parameters}"`;
+                            }
+                            return html + `><div class="ai-practice-output" style="display:none;"></div><div class="ai-practice-header"><span class="topic">${topicTrimmed}</span><div class="ai-practice-output-style-wrapper"><label>Style <select class="ai-practice-output-style"><option value="10">Learn</option><option value="0">Practice</option><option value="20">Challenge</option></select></label></div></div><div class="ai-input-wrapper"><textarea class="ai-input" placeholder="Ask a question..."></textarea><span class="ai-submit-wrapper"><input type="button" class="ai-submit primary" value="&#8679;"/></span></div><a href="#" class="suggest-topics">Suggest topics</a></div>`;
+                        });
+                    }
+                }
+            }];
+        });
+
+        converter = new showdown.Converter({
+            //simpleLineBreaks: true,
+            tables: true,
+            tasklists: true,
+            disableForced4SpacesIndentedSublists: true,
+            strikethrough: true,
+            literalMidWordUnderscores: true,
+            literalMidWordAsterisks: true,
+            //simplifiedAutoLink: true,
+            //excludeTrailingPunctuationFromURLs: true,
+            customizedHeaderId: true,
+            //openLinksInNewWindow: true, 
+            ghCompatibleHeaderId: true,
+            emoji: true,
+            smoothLivePreview: true,
+            splitAdjacentBlockquotes: true,
+            extensions: [
+                "inlineCommandLinks"
+                , "commandReferences"
+                , "commandReferenceLinks"
+                , "commandReferenceLinks"
+                , "typeTextAndCopyable"
+                , "ms_include"
+                , "instructionsInclude"
+                , "instructionsDialogLink"
+                , "pagebreak"
+                , "youtubevideo"
+                , "video"
+                , "audio"
+                , "image"
+                , "link"
+                , "referenceLink"
+                , "tip"
+                , "expandableBlockquoteModifiersBefore",
+                , "expandableBlockquoteModifiersAfter",
+                , "blockquoteModifiersBefore"
+                , "blockquoteModifiersAfter"
+                , "sections-preprocess"
+                , "sections-postprocess"                
+                , "activities"
+                , "variables"
+                , "container-terminals"
+                , "keyCombo"
+                , "ai"
+                , "ai-chat"
+                , "ai-content"
+                , "ai-practice"
+            ]
+        });
+        showDownInitialized = true;
+    }
+
+    function isNewVariableName(variableName) {
+        if (definedVariables) {
+            for (var existingName in definedVariables) {
+                if (variableName === existingName) return false;
+            }
+        }
+        for (var i = 0; i < dynamicVariables.length; i++) {
+            if (dynamicVariables[i].name === variableName) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    function nthIndex(str, pat, n) {
+        var L = str.length, i = -1;
+        while (n-- && i++ < L) {
+            i = str.indexOf(pat, i);
+            if (i < 0) break;
+        }
+        return i;
+    }
+
+    function processPossibleYamlHeader(source) {
+        if (nthIndex(source, '---', 1) === 0) {
+            var yamlEndIndex = nthIndex(source, '---', 2);
+            if (yamlEndIndex > 0) {
+                var yamlString = source.substring(3, yamlEndIndex);
+                try {
+                    var yaml = YAML.parse(yamlString);
+                    return { yaml: yaml, document: source.substring(yamlEndIndex + 3) };
+                } catch (e) {
+                    //
+                }
+            }
+        }
+        return null;
+    }
+
+    function processDocument(source, containerId) {
+        if (!showDownInitialized) {
+            initializeShowdown();
+        }
+
+        source = sanitizeContent(source);
+        source = normalizeLineEndings(source);
+
+        var yamlExtraction = processPossibleYamlHeader(source);
+
+        if (yamlExtraction != null) {
+            source = yamlExtraction.document;
+        }
+
+        contentRootPath = null;
+
+        var html = converter.makeHtml(source);
+        var wrappedHtml = "<div>" + html + "</div>";
+        var $html = $(sanitizeHTML(wrappedHtml));
+
+        $("#" + containerId).append($html);
+
+        doDomProcessing($html, "");
+    }
+
+    function processUrl(url, containerId) {
+        var $container = $("#" + containerId);
+
+        if (url && $container.length > 0) {
+            url = getContentUrl(url, contentRootPath);
+
+            $.get(url, function (response) {
+                try {
+                    var content = response;
+
+                    content = sanitizeContent(content);
+                    content = normalizeLineEndings(content);
+
+                    var yamlExtraction = processPossibleYamlHeader(response);
+
+                    if (yamlExtraction != null) {
+                        //TODO:store the YAML for possible use elsewhere
+                        //var yaml = yamlExtraction.yaml;
+                        content = yamlExtraction.document;
+                    }
+
+                    contentRootPath = url.substr(0, url.lastIndexOf("/") + 1);
+
+                    var html = converter.makeHtml(content);
+
+                    $container.html(sanitizeHTML(html));
+
+                    doDomProcessing($container, contentRootPath);
+                } catch (e) {
+                    $container.html("Unable to process content from " + url);
+                }
+            }).fail(function (response) {
+                $container.html("<div class='contentError'>Unable to retrieve content from " + url + (response && response.responseText ? ". " + $(response.responseText).text() : "") + "</div>");
+            });
+        }
+    }
+
+    /**
+     * Handle sanitizing an HTML element
+     * @param {string} element the element to handle parsing
+     * @returns the sanitized element
+     */
+    function sanitizeElement(element) {
+        // Avoid non-element nodes
+        if (element.nodeType !== 1) {
+            return;
+        }
+
+        // Sanitize element attributes
+        let attributes = element.attributes;
+
+        for (let i = attributes.length - 1; i >= 0; i--) {
+            const attribute = attributes[i];
+            let name = attribute.name.toLowerCase();
+            let value = attribute.value.toLowerCase();
+
+            if (
+                name.startsWith("on") || // Remove event handlers
+                name === "srcset" || // Prevent image-based attacks
+                value.startsWith("javascript:") || // Remove JS URIs
+                value.startsWith("data:") // Remove data URIs
+            ) {
+                element.removeAttribute(name);
+            }
+        }
+
+        // Sanitize child elements
+        for (let i = 0; i < element.children.length; i++) {
+            sanitizeElement(element.children[i]);
+        }
+    }
+
+    /**
+     * Handles sanitizing HTML content before injecting it into the DOM
+     * @param {string} rawHTML the HTML content to sanitize
+     * @returns sanitized HTML
+     */
+    function sanitizeHTML(rawHTML) {
+        let sanitisedHTML = $.parseHTML(rawHTML);
+
+        // Sanitize parsed HTML elements
+        sanitisedHTML.forEach(element => sanitizeElement(element));
+
+        return sanitisedHTML;
+    }
+
+    /**
+     * Handle sanitizing some invalid/invisible characters
+     * @param {string} content the content to sanitize
+     * @returns sanitized string
+     */
+    function sanitizeContent(content) {
+        return content
+            .replace(/[\u2018\u2019]/g, "'")
+            .replace(/[\u201C\u201D]/g, '"')
+            .replace(/[\u2013\u2014]/g, "-")
+            .replace(/\u00a0/g, " "); //non-breaking space
+    }
+
+    /**
+     * Handle normalizing line endings to always and only be "\n"
+     * @param {string} content the content to normalize
+     * @returns the content with normalized line endings
+     */
+    function normalizeLineEndings(content) {
+        // Normalize line endings to only be "\n"
+        return content.replace(/\r\n|\r/g, "\n");
+    }
+
+    function escapeRegExp(str) {
+        return str.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, "\\$1");
+    }
+
+    function replaceAll(str, find, replace, caseSensitive) {
+        if (str == null) {
+            str = "";
+        }
+
+        if (replace == null) {
+            replace = "";
+        }
+
+        str = normalizeLineEndings(str);
+        find = normalizeLineEndings(find);
+        replace = normalizeLineEndings(replace);
+        
+        var options = caseSensitive ? 'g' : 'ig';
+        var escapedFineRegex = escapeRegExp(find);
+
+        return str.replace(new RegExp(escapedFineRegex, options), replace);
+    }
+
+    function applyReplacementTokens(text, replacementTokens) {
+        if (replacementTokens && replacementTokens.length > 0) {
+            for (let z = 0, numTokens = replacementTokens.length; z < numTokens; z++) {
+                let token = replacementTokens[z];
+                text = replaceAll(text, token.Token, token.Replacement);
+            }
+        }
+        return text;
+    }
+
+    function removeTemporaryRenderDataForEditInstructions(activities) {
+        activities.forEach(item => {
+            item.isUsed = false;
+        });
+    }
+
+    function process(source, containerId, documentRoot, replacementTokens, customDomProcessing, activities, activityGroups, variables, processVariables, replacements, includeCallback) {
+        if (model.isPreview) {
+            removeTemporaryRenderDataForEditInstructions(activities);
+        }
+
+        if (!showDownInitialized) {
+            initializeShowdown();
+        }
+
+        source = sanitizeContent(source);
+        source = normalizeLineEndings(source);
+
+        dynamicVariables = [];
+        definedVariables = variables;
+
+        let yamlExtraction = processPossibleYamlHeader(source);
+
+        if (yamlExtraction != null) {
+            //TODO:store the YAML for possible use elsewhere
+            //var yaml = yamlExtraction.yaml;
+            source = yamlExtraction.document;
+        }
+
+        contentRootPath = documentRoot;
+
+        if (replacements && replacements.length > 0) {
+            for (let i = 0, numReplacements = replacements.length; i < numReplacements; i++) {
+                let replacement = replacements[i];
+
+                if (replacement.Regex) {
+                    if (replacement.RegexError === true) {
+                        continue;
+                    }
+
+                    try {
+                        let replacementFind = normalizeLineEndings(replacement.Text);
+                        let replacementReplace = normalizeLineEndings(replacement.Replacement);
+
+                        source = source.replace(new RegExp(replacementFind, replacement.CaseSensitive ? "gm" : "igm"), replacementReplace);
+                    } catch (ex) {
+                        console.error(`Error processing regex replacement "${replacement.Text}".`, ex);
+                    }
+                } else {
+                    source = replaceAll(source, replacement.Text, replacement.Replacement, replacement.CaseSensitive);
+                }
+            }
+        }
+
+        source = applyReplacementTokens(source, replacementTokens);
+
+        let html = converter.makeHtml(source);
+
+        if (containerId == "pages") {
+            let pages = html.split("<hr class='pagebreak'/>");
+            let numPages = pages.length;
+
+            if (!$container || cachedContainerId !== containerId) {
+                $container = $("#" + containerId);
+                cachedContainerId = containerId;                
+            }
+
+            $container.html("");
+
+            for (let i = 0; i < numPages; i++) {
+                let pageHtml = pages[i];
+                let pageId = "page" + i;
+                let $page = null;
+
+                $page = $(`#${pageId}`);
+
+                if ($page.length == 0) {
+                    $page = $(`<div class="page" id="${pageId}"></div>`);
+                    $container.append($page);
+                }
+
+                $page.html(sanitizeHTML(pageHtml));
+
+                doDomProcessing($page, documentRoot, customDomProcessing, activities, activityGroups, replacementTokens, variables, processVariables, replacements, includeCallback);
+            }
+        } else {
+            let $singlePage = $(`#${containerId}`);
+
+            $singlePage.html(sanitizeHTML(html));
+
+            doDomProcessing($singlePage, documentRoot, customDomProcessing, activities, activityGroups, replacementTokens, variables, processVariables, replacements, includeCallback);
+        }
+    }
+
+    function processInclude($include, contentRoot, customProcessing, activities, activityGroups, replacementTokens, variables, processVariables, replacements, includeCallback, isRetry) {
+        var $parent = $include.parent();
+
+        if ($parent.length > 0 && $parent.prop("tagName") == "P") {
+            $parent.before($include);
+            $parent.remove();
+        }
+
+        var src = $include.attr("src");
+
+        if (src) {
+            if (variables) {
+                if (src.indexOf("@LAB-VARIABLE-") >= 0) {
+                    $include.addClass("hasVariableUrl");
+                }
+
+                for (var name in variables) {
+                    var val = variables[name];
+
+                    src = replaceAll(src, "@LAB-VARIABLE-" + name, val);
+                }
+            }
+
+            var url = getContentUrl(src, contentRoot);
+
+            if (url === "http:/" || url === "https:/") return; //can be typed during authoring and will never work
+
+            var srcUrl = url; //in case we need this in an error condition. we may modify the actual URL for proxy purposes.
+            var url = isRetry ? `${proxyUrl}?url=${url}` : url;
+
+            $.get(url, function (response) {
+                try {
+                    var content = response;
+
+                    content = sanitizeContent(content);
+                    content = normalizeLineEndings(content);
+
+                    var yamlExtraction = processPossibleYamlHeader(response);
+
+                    if (yamlExtraction != null) {
+                        //TODO:store the YAML for possible use elsewhere
+                        //var yaml = yamlExtraction.yaml;
+                        content = yamlExtraction.document;
+                    }
+
+                    contentRootPath = url.substr(0, url.lastIndexOf("/") + 1);
+
+                    if (replacements && replacements.length > 0) {
+                        for (var i = 0, numReplacements = replacements.length; i < numReplacements; i++) {
+                            var replacement = replacements[i];
+
+                            if (replacement.Regex) {
+                                if (replacement.RegexError === true) {
+                                    continue;
+                                }
+
+                                try {
+                                    let replacementFind = normalizeLineEndings(replacement.Text);
+                                    let replacementReplace = normalizeLineEndings(replacement.Replacement);
+
+                                    content = content.replace(new RegExp(replacementFind, replacement.CaseSensitive ? "gm" : "igm"), replacementReplace);
+                                } catch (ex) {
+                                    console.error(`Error processing regex replacement "${replacement.Text}".`, ex);
+                                }
+                            } else {
+                                content = replaceAll(content, replacement.Text, replacement.Replacement, replacement.CaseSensitive);
+                            }
+                        }
+                    }
+
+                    content = applyReplacementTokens(content, replacementTokens);
+
+                    var includeHtml = converter.makeHtml(content);
+
+                    $include.html(sanitizeHTML(includeHtml));
+
+                    doDomProcessing($include, contentRootPath, customProcessing, activities, activityGroups, replacementTokens, variables, processVariables, replacements, includeCallback);
+
+                    if (variables && processVariables) {
+                        processVariables();
+                    }
+
+                    if (includeCallback) {
+                        includeCallback();
+                    }
+                } catch (e) {                   
+                    if (!isRetry && proxyUrl !== null) {
+                        processInclude($include, contentRoot, customProcessing, activities, activityGroups, replacementTokens, variables, processVariables, replacements, includeCallback, true)
+                    } else {
+                        $include.html("Unable to process content from " + srcUrl);
+                    }
+                }
+            }).fail(function (response) {
+                if (!isRetry && proxyUrl !== null) {
+                    processInclude($include, contentRoot, customProcessing, activities, activityGroups, replacementTokens, variables, processVariables, replacements, includeCallback, true)
+                } else {
+                    $include.html("<div class='contentError'>Unable to retrieve content from " + srcUrl + (response && response.responseText ? ". " + $(response.responseText).text() : "") + "</div>");
+                }
+            });
+        }
+    }
+
+    var taskIndex = 0;
+
+    function doDomProcessing($element, contentRoot, customProcessing, activities, activityGroups, replacementTokens, variables, processVariables, replacements, includeCallback) {
+        $element.find(".task-list-item").each(function () {
+            var $li = $(this);
+            var clientTaskId = "taskIndex" + taskIndex;
+            $li.removeAttr("style").attr("id", clientTaskId);
+            $li.closest("ol,ul").addClass("taskList");
+            //replace the default checkbox with our own wrapped one.
+            var $checkbox = $li.find('input[type="checkbox"]').eq(0);
+            var checked = $checkbox.prop("checked");
+            $checkbox.before("<label class='checkbox'><input type='checkbox'" + (checked ? "checked='checked'" : "") + " aria-labelledby='" + clientTaskId + "' /><span></span></label>");
+            $checkbox.remove();
+            taskIndex += 1;
+        });
+        $element.find(".copyable").attr("title", "Copy to clipboard").attr("tabindex", "0").attr("role", "button");
+        $element.find(".typeText").attr("title", "Type Text").attr("tabindex", "0").attr("role", "button");
+        $element.find(".knowledge").each(function () {
+            var $moreKnowledge = $("<div class='moreKnowledge'><a href='#' class='moreKnowledgeLink'>more...</a></div>");
+            $(this).after($moreKnowledge);
+        });
+
+        var $codeBlocks = $element.find("code");
+
+        if ($codeBlocks.length > 0) {
+            var $languageCodeBlocks = $codeBlocks.filter('[class*="language-"]');
+
+            $languageCodeBlocks.each(function () {
+                var $languageCodeBlock = $(this);
+                var classNames = $languageCodeBlock[0].className;
+                var indexOfLanguage = classNames.indexOf("language-");
+
+                if (indexOfLanguage > 0) {
+                    var language = classNames.substring(0, indexOfLanguage - 1);
+                    var nocode = language.indexOf("nocode") >= 0;
+                    var nocopy = language.indexOf("nocopy") >= 0;
+                    var nocolor = language.indexOf("nocolor") >= 0;
+                    var notab = language.indexOf("notab") >= 0;
+                    var wrap = language.indexOf("-wrap") >= 0;
+
+                    if (nocode || nocopy) {
+                        $languageCodeBlock.attr("title", "");
+                        $languageCodeBlock.addClass("nocopy");
+                    }
+
+                    if (nocode || nocolor) {
+                        $languageCodeBlock.addClass("nocode");
+                    }
+
+                    if (wrap) {
+                        $languageCodeBlock.addClass("wrap");
+                    }
+
+                    var variableSyntaxMatches = language.match(/(\S+)\((\S+)\s*=\s*(\S+)\)/);
+
+                    if (variableSyntaxMatches) {
+                        language = variableSyntaxMatches[1];
+
+                        var $preWrapper = $languageCodeBlock.closest("pre");
+
+                        $preWrapper.addClass("display-by-variable");
+                        $preWrapper.attr("data-variable-name", variableSyntaxMatches[2]);
+                        $preWrapper.attr("data-variable-value", variableSyntaxMatches[3]);
+                    }
+
+                    var langParts = language.split('-');
+                    var lang = langParts[0];
+
+                    if (!notab && !nocode && lang && !["nocode", "nocopy", "nocolor", "notab", "wrap", "linenums"].includes(lang)) {
+                        var titleClass = nocopy ? "codeTitle noIndent" : "codeTitle";
+                        var $codeLanguageTitle = $("<div class='" + titleClass + "'><span class='title'>" + lang + "</span></div>");
+
+                        $languageCodeBlock.before($codeLanguageTitle);
+
+                        if (model.layoutVersion > 1) {
+                            if (isChildClient) {
+                                $codeLanguageTitle.append("<span class='title'><span class='type-code-block'>Type</span><span class='copy-code-block'>Copy</span></span>");
+                            } else {
+                                $codeLanguageTitle.append("<span class='copy-code-block'>Copy</span>");
+                            }                            
+                        }
+
+                        if (nocopy) {
+                            $codeLanguageTitle.find('.copy-code-block').hide(); // Hide the Copy button
+                        }
+                    }
+                }
+            });
+
+            $codeBlocks.each(function () {
+                var html = $(this).html();
+                html = html.replace(/@lab\.Variable\((")?([a-zA-Z0-9_-]+)\1\)/g, '<span class="nocode">&lt;$2&gt;</span>');
+                $(this).html(html);
+            });
+
+            $codeBlocks.addClass("prettyprint");
+            $codeBlocks.attr("tabindex", "0");
+
+            try {
+                PR.prettyPrint(); //TODO: target only the current page
+            } catch (e) {
+                //
+            }
+
+            $codeBlocks.find("li").append("\n"); //insert a linebreak ino the HTML so that code copy honors line breaks
+        }
+
+        // new layouts always add a code title block, even if no language options were specified. 
+        if (model.layoutVersion > 1) {
+            $codeBlocks.each(function () {
+                let $codeBlock = $(this);
+                let $preBlock = $codeBlock.closest("pre");
+
+                if ($preBlock.length > 0) {
+                    let $codeTitle = $preBlock.find(".codeTitle");
+
+                    if ($codeTitle.length === 0) {
+                        let copyElement = !$codeBlock.hasClass("nocopy")
+                            ? `<span class='copy-code-block'>Copy</span>`
+                            : '';
+
+                        $codeTitle = isChildClient
+                            ? $(`<div class='codeTitle'><span class='title'></span><span class='buttons'><span class='type-code-block'>Type</span>${copyElement}</span></div>`)
+                            : $(`<div class='codeTitle'><span class='title'></span><span class='buttons'>${copyElement}</span></div>`); 
+
+                        $codeBlock.before($codeTitle);
+                    }
+                }
+            });
+        }
+
+        $element.find("include").each(function () {
+            var $include = $(this);
+            processInclude($include, contentRoot, customProcessing, activities, activityGroups, replacementTokens, variables, processVariables, replacements, includeCallback);
+        });
+
+        $element.find("div.instructionsblock").each(function () {
+            var $insertpoint = $(this);
+            var referenceId = $insertpoint.attr("ref");
+            if (referenceId) {
+                var $reference = $("blockquote[data-id='" + referenceId + "']");
+                if ($reference.length > 0) {
+                    $insertpoint.html($reference.html());
+                }
+            }
+        });
+
+        $element.find("video,audio,.audioLink,.videoLink").bind('contextmenu', function () { return false; });
+
+        $('video, audio').attr('controlsList', 'nodownload');
+
+        if (activities && activities.length > 0) {
+
+            if (activityGroups && activityGroups.length > 0) {
+                var $activityGroups = $element.find(".activityGroup");
+                for (var j = 0, numActivityGroups = $activityGroups.length; j < numActivityGroups; j++) {
+                    var $activityGroup = $activityGroups.eq(j);
+                    var groupAlias = $activityGroup.attr("data-alias");
+                    var activityGroup = getActivityGroupByAlias(activityGroups, groupAlias);
+                    if (activityGroup === null) {
+                        $activityGroup.html("Activity Group " + groupAlias + " could not be found.").addClass("contentError");
+                        continue;
+                    }
+                    var $groupInstances = $(".activityGroup[data-alias='" + groupAlias + "']");
+                    $groupInstances.each(function (index) {
+                        $(this).attr('data-index', index);
+                    });
+                    var groupIndex = $activityGroup.attr("data-index");
+                    if (activityGroup.OnDemandEvaluation === true) {
+                        $activityGroup.addClass("on-demand-evaluation");
+                    }
+                    var activitiesInGroup = selectActivitiesForGroup(activityGroup, groupIndex, activities);
+                    var activityGroupHtml = "";
+                    for (var k = 0, numActivitiesInGroup = activitiesInGroup.length; k < numActivitiesInGroup; k++) {
+                        var activityInGroup = activitiesInGroup[k]
+                        activityGroupHtml += "<div class='activity' data-alias='" + activityInGroup.ReplacementTokenAlias + "'></div>";
+                    }
+                    $activityGroup.html(activityGroupHtml);
+                    if (activityGroup.OnDemandEvaluation === true) {
+                        $activityGroup.append("<div><input type='button' class='evaluateActivityGroup primary'/></div>");
+                        var buttonText = activityGroup.OnDemandEvaluationButtonText
+                            ? activityGroup.OnDemandEvaluationButtonText
+                            : "Evaluate";
+                        $activityGroup.find(".evaluateActivityGroup").val(buttonText);
+                    }
+                }
+            }
+
+            var $activities = $element.find(".activity");
+            for (var i = 0, numActivities = $activities.length; i < numActivities; i++) {
+                var $activity = $activities.eq(i);
+                var replacementTokenAlias = $activity.attr("data-alias");  
+                var activity = getActivityByReplacementTokenAlias(activities, replacementTokenAlias);
+                if (activity === null) {
+                    $activity.html("Activity " + replacementTokenAlias + " could not be found.").addClass("contentError");
+                } else {
+
+                    var $instances = $(".activity[data-alias='" + replacementTokenAlias + "']");
+                    $instances.each(function (activityIndex) {
+                        $(this).attr('data-index', activityIndex);
+                    });
+                    var activityIndex = $activity.attr("data-index");
+
+                    var result = null;
+                    if (activity.Results != null && activity.Results.length > 0) {
+                        for (var m = 0, numResults = activity.Results.length; m < numResults; m++) {
+                            if (activity.Results[m].ActivityIndex == activityIndex) {
+                                //TODO:check that this was evaluated on demand vs. simply background recorded
+                                result = activity.Results[m];
+                                if (result.Evaluated) {
+                                    activity.AlreadyEvaluated = true;
+                                    activity.Passed = result.Passed;
+                                }
+                                break;
+                            }
+                        }
+                    }
+
+                    if (activity.Type === 0 || activity.Type === 10) {
+                        let answers = selectAnswersForActivity(activity, activityIndex);
+                        let html = "<div class='questionText'>" + converter.makeHtml(applyReplacementTokens(activity.Text, replacementTokens)) + "</div><div class='answers'>";
+                        for (let answerIndex = 0, len = answers.length; answerIndex < len; answerIndex++) {
+                            let answer = answers[answerIndex];
+                            html += "<div class='answer' data-id='" + answer.Id + "'><label><input " +
+                                (activity.Type === 0 ? "type='radio' name='question" + activity.Id + "-" + activityIndex + "'" : "type='checkbox'") +
+                                (activities.DisplayCorrectAnswers && answer.Correct ? " checked='checked'" : "") +
+                                " />" + applyReplacementTokens(answer.Text, replacementTokens) + "</label></div>";
+                        }
+                        html += "</div>";
+                        $activity.html(sanitizeHTML(html));
+                        if (result) {
+                            for (var k = 0, numAnswerResults = result.AnswerResults.length; k < numAnswerResults; k++) {
+                                var answerResult = result.AnswerResults[k];
+                                $activity.find(".answer[data-id='" + answerResult + "'] input").prop("checked", true);
+                            }
+                        }
+                        if (activity.AlreadyEvaluated && !activity.AllowRetry) {
+                            $activity.find(".answer input").prop("disabled", true);
+                        }
+                    } else if (activity.Type == 20 || activity.Type == 30) {
+                        var html = "<label for='" + activity.ReplacementTokenAlias + "' class='questionText'>" + converter.makeHtml(applyReplacementTokens(activity.Text, replacementTokens)) + "</label><div class='answer'><input type='text' id='" + activity.ReplacementTokenAlias + "' autocomplete='off' class='answerText' maxlength='200'/></div></div>";
+                        $activity.html(sanitizeHTML(html));
+                        if (activities.DisplayCorrectAnswers && activity.TextAnswer) { //only used in editor
+                            $activity.find("input:text").attr("placeholder", activity.TextAnswer);
+                        }
+                        if (result && result.TextResult) {
+                            $activity.find("input:text").val(result.TextResult);
+                        }
+                        if (activity.AlreadyEvaluated && !activity.AllowRetry) {
+                            $activity.find(".answer input").prop("disabled", true);
+                        }
+                    } else if (activity.Type == 40) {
+                        if (activity.Text) {
+                            $activity.html(sanitizeHTML("<div class='automatedActivityText'>" + converter.makeHtml(applyReplacementTokens(activity.Text, replacementTokens)) + "</div>"));
+                        }
+                        if (activity.DisplayScriptsAsTaskList && activity.Scripts && activity.Scripts.length > 0) {
+                            var taskListHtml = "<div class='taskListEvalButtonTop'></div><div class='scriptTaskList primary-color-low-opacity-border'>";
+                            for (var m = 0, numScripts = activity.Scripts.length; m < numScripts; m++) {
+                                var script = activity.Scripts[m];
+                                if (script.Enabled) {
+                                    taskListHtml += "<div class='scriptTask' data-id='" + script.Id + "'><div class='status'><span class='running loadingAnimation-medium'></span><span class='result'></span></div><div class='taskText'>" + converter.makeHtml(applyReplacementTokens(script.Text, replacementTokens)) + "</div><div role='status' id='responseHolder'" + script.Id + "><div class='response' style='display:none;'></div></div></div>";
+                                }
+                            }
+                            taskListHtml += "</div><div class='taskListEvalButtonBottom'></div>";
+                            $activity.append(sanitizeHTML(taskListHtml));
+                        }
+                    } else if (activity.Type == 70) {
+                        if (activity.Text) {
+                            $activity.html(sanitizeHTML("<div class='automatedActivityText'>" + converter.makeHtml(applyReplacementTokens(activity.Text, replacementTokens)) + "</div>"));
+                        }
+                    }            
+
+                    if (activity.OnDemandEvaluation) {
+                        var $container = $activity;
+                        if (activity.Type === 40 && activity.DisplayScriptsAsTaskList) {
+                            if (activity.OnDemandEvaluationButtonBelowTaskList) {
+                                $container = $activity.find(".taskListEvalButtonBottom");
+                            } else {
+                                $container = $activity.find(".taskListEvalButtonTop");
+                            }                            
+                        }
+                        $container.append("<div><input type='button' class='evaluate primary'" + (!activity.AllowRetry && activity.AlreadyEvaluated ? " disabled='disabled'" : "") + " /><span class='loading loadingAnimation-medium' style='display:none;'></span></div><div class='feedbackHolder' id='feedbackHolder" + activity.ReplacementTokenAlias + "' role='status'></div>");
+                        var onDemandButtonText = activity.OnDemandEvaluationButtonText
+                            ? activity.OnDemandEvaluationButtonText
+                            : activity.Scored ? "Score" : "Check";
+                        $activity.find(".evaluate").val(onDemandButtonText);
+                    }
+
+                    if (result != null && result.Evaluated) {
+                        if (activity.DisplayScriptsAsTaskList) {
+                            for (var n = 0, numScripts = result.ScriptResults.length; n < numScripts; n++) {
+                                var scriptResult = result.ScriptResults[n];
+                                var $scriptTask = $activity.find(".scriptTask[data-id='" + scriptResult.ScriptId + "']");
+                                if ($scriptTask.length > 0) {
+                                    if (scriptResult.Passed) {
+                                        $scriptTask.addClass("pass");
+                                    } else {
+                                        $scriptTask.addClass("fail");
+                                    }
+                                    if (scriptResult.Response || scriptResult.Text) {
+                                        var $response = $scriptTask.find(".response");
+                                        $response.show();
+                                        if (scriptResult.Response) {
+                                            $response.append($(sanitizeHTML("<div class='textResponse'>" + converter.makeHtml(scriptResult.Response) + "</div>")));
+                                        }
+                                        if (scriptResult.Text) {
+                                            $response.append($("<div class='scriptResponse'>" + scriptResult.Text.replace("\n", "<br>") + "</div>"));
+                                        }
+                                    }
+                                }
+                            }
+                        } else {
+                            var $feedback = $("<div class='feedback'></div>");
+                            $activity.append($feedback);
+                            if (result.Passed) {
+                                $feedback.addClass("positive");
+                            } else {
+                                $feedback.addClass("negative");
+                            }
+                            var response = result.Response;
+                            if (response) {
+                                response = converter.makeHtml(response);
+                            }
+                            if (!response && (activity.Type < 40 || activity.Type == 70)) {
+                                response = result.Passed ? "Correct" : "Incorrect";
+                            }
+                            if (response) {
+                                $feedback.html("<div class='textResponse'>" + response + "</div>");
+                            }
+                            for (var p = 0, numScripts = result.ScriptResults.length; p < numScripts; p++) {
+                                var scriptResult = result.ScriptResults[p];
+                                if (scriptResult.Text) {
+                                    $feedback.append($("<div class='scriptResponse'>" + scriptResult.Text + "</div>"));
+                                }
+                            }
+                            if (activity.Type == 70 && result.ScreenshotMessage) {
+                                $feedback.append($("<div class='scriptResponse'>" + result.ScreenshotMessage + "</div>"));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        if (variables) {
+            $element.find("a.variable-link").each(function () {
+                let $link = $(this);
+                for (let name in variables) {
+                    if ($link.attr("data-variable") == name) {
+                        $link.attr("href", variables[name]);
+                        break;
+                    }
+                }
+            });
+        }
+
+        $element.find(".ai-completion-prompt, .ai-content").each(function () {
+            let $prompt = $(this);
+            let encodedPrompt = $(this).attr("data-prompt");
+            if (encodedPrompt && encodedPrompt.length > 0) {
+                let decodedPrompt = decodeURIComponent(encodedPrompt);
+                try {
+                    let prompt = eval(`[${decodedPrompt}]`);
+                    $prompt.data("prompt", prompt[0]);
+                } catch {
+                    console.error(`Unable to process AI prompt ${decodedPrompt}`);
+                }
+                $prompt.removeAttr("data-prompt");
+            }
+        });
+
+        $element.find(".ai-chat").each(function () {
+            let $ai_chat = $(this);
+            let encodedParameters = $(this).attr("data-parameters");
+            let idSet = false;
+            if (encodedParameters && encodedParameters.length > 0) {
+                let decodedParameters = decodeURIComponent(encodedParameters);
+                try {
+                    let parameters = eval(`[${decodedParameters}]`)[0];                    
+                    if (parameters.placeholder) {
+                        $ai_chat.find(".ai-input").attr("placeholder", parameters.placeholder);
+                    }
+                    if (parameters.id) {
+                        $ai_chat.attr("data-id", parameters.id);
+                        idSet = true;
+                    }
+                    if (parameters.messages) {
+                        let messages = parameters.messages;
+                        parameters.messages = [];
+                        for (const message of messages) {
+                            parameters.messages.push({ role: "system", content: message });
+                        }
+                    }
+                    $ai_chat.data("parameters", parameters);
+                } catch {
+                    console.error(`Unable to process AI chat parameters ${decodedParameters}`);
+                }
+                $ai_chat.removeAttr("data-parameters");
+            }
+            if (!idSet) {
+                $ai_chat.attr("data-id", $ai_chat.attr("data-topic").substring(0, 50));
+            }
+        });
+
+        $element.find(".ai-practice").each(function () {
+            let $ai_practice = $(this);            
+            let encodedParameters = $(this).attr("data-parameters");
+            if (encodedParameters && encodedParameters.length > 0) {
+                let decodedParameters = decodeURIComponent(encodedParameters);
+                try {
+                    let parameters = eval(`[${decodedParameters}]`)[0];
+                    parameters.practice = true;
+                    if (parameters.placeholder) {
+                        $ai_practice.find(".ai-input").attr("placeholder", parameters.placeholder);
+                    }
+                    if (parameters.prompt) {
+                        parameters.messages = [];
+                        parameters.messages.push({ role: "system", content: parameters.prompt });
+                    }
+                    $ai_practice.data("parameters", parameters);
+                } catch {
+                    console.error(`Unable to process AI practice parameters ${decodedParameters}`);
+                }
+            } else {
+                $ai_practice.data("parameters", { practice: true });
+            }
+            $ai_practice.removeAttr("data-parameters"); 
+            $ai_practice.attr("data-id", `ai-practice-${$ai_practice.attr("data-topic").substring(0, 50) }`);
+        });
+
+
+        if (customProcessing) {
+            customProcessing($element);
+        }
+    }
+
+    function selectActivitiesForGroup(activityGroup, groupIndex, activities) {
+        // in case we've rendered this group before for this lab instance and need to ensure the same activities are displayed
+        if (activityGroup.UseAsItemBank && activityGroup.Deliveries && activityGroup.Deliveries.length > groupIndex) {
+            var activityIds = activityGroup.Deliveries[groupIndex];
+            if (activityIds?.length >= 0) {
+                var previousActivities = [];
+                for (var idIndex = 0; idIndex <= activityIds.length; idIndex++) {
+                    var id = activityIds[idIndex];
+                    for (var activityIndex = 0; activityIndex <= activities.length; activityIndex++) {
+                        var activity = activities[activityIndex];
+                        if (activity) {
+                            if (activity.Id === id) {
+                                activity['isUsed'] = true;
+                                previousActivities.push(activity);
+                            }
+                        }
+                    }
+                }
+                return previousActivities;
+            }
+        }
+        var results = [];
+        for (var i = 0; i < activities.length; i++) {
+            if (activities[i].ActivityGroupId === activityGroup.Id && activities[i]?.isUsed !== true) { 
+                results.push(activities[i]);
+            }  
+        }
+        var numActivitiesToDisplay = activityGroup.ItemBankNumActivitiesToDisplay > 0 && activityGroup.ItemBankNumActivitiesToDisplay < results.length ? activityGroup.ItemBankNumActivitiesToDisplay : results.length;
+        if (activityGroup.UseAsItemBank) {
+            var randomized = [];
+            while (randomized.length < numActivitiesToDisplay) {
+                var randomIndex = Math.floor(Math.random() * results.length);
+                randomized.push(results.splice(randomIndex, 1)[0]);
+                randomized[randomized.length - 1]['isUsed'] = true;
+            }
+            return randomized;
+        }
+        return results;
+    }
+
+    function selectAnswersForActivity(activity, activityIndex) {
+        if (activity.RandomizeAnswerSequence) {
+            if (activity.AnswerDeliveries && activity.AnswerDeliveries.length > activityIndex) { //in case we've rendered this activity before for this lab instance and need to ensure the same answers are diplayed
+                var answerIds = activity.AnswerDeliveries[activityIndex];
+                if (answerIds.length === activity.Answers.length) {
+                    var previousAnswers = [];
+                    for (var idIndex = 0; idIndex <= answerIds.length; idIndex++) {
+                        var id = answerIds[idIndex];
+                        for (var answerIndex = 0; answerIndex <= activity.Answers.length; answerIndex++) {
+                            var answer = activity.Answers[answerIndex];
+                            if (answer && answer.Id === id) {
+                                previousAnswers.push(answer);
+                            }
+                        }
+                    }
+                    return previousAnswers;
+                }
+            }
+            var numAnswers = activity.Answers.length;
+            var allAnswers = [];
+            for (var i = 0; i < numAnswers; i++) {
+                allAnswers.push(activity.Answers[i]);
+            }
+            var randomized = [];
+            while (randomized.length < numAnswers) {
+                var randomIndex = Math.floor(Math.random() * allAnswers.length);
+                randomized.push(allAnswers.splice(randomIndex, 1)[0]);
+            }
+            return randomized;
+        }
+        return activity.Answers;
+    }
+
+    function getActivityGroupByAlias(activityGroups, alias) {
+        for (var i = 0, numActivityGroups = activityGroups.length; i < numActivityGroups; i++) {
+            if (activityGroups[i].Alias === alias) {
+                return activityGroups[i];
+            }
+        }
+        return null;
+    }
+
+    function getActivityByReplacementTokenAlias(activities, replacementTokenAlias) {        
+        for (var i = 0, numActivities = activities.length; i < numActivities; i++) {
+            if (activities[i].ReplacementTokenAlias === replacementTokenAlias) {
+                return activities[i];
+            }
+        }
+        return null;
+    }
+
+    function getContentUrl(url, contentRoot) {
+        if (!contentRoot) return url;
+        if (url.indexOf("/") === 0 || url.indexOf(":") >= 0 || url.indexOf("#") === 0) return url;
+        return contentRoot + url;
+    }
+
+    return {
+        process: process,
+        processDocument: processDocument,
+        processUrl: processUrl,
+        processInclude: processInclude,
+        doDomProcessing: doDomProcessing,
+        setProxyUrl: function (url) {
+            proxyUrl = url;
+        },
+        getDynamicVariables: function () { return dynamicVariables; },
+        makeHtml: function (markdown, contentRoot) {
+            initializeShowdown();
+            if (contentRoot) {
+                contentRootPath = contentRoot;
+            }
+            return converter.makeHtml(markdown);
+        }
+    };
+}();

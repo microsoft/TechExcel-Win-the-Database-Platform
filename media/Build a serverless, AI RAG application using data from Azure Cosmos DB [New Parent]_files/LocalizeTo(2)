@@ -1,0 +1,51 @@
+$(function () {
+    let options = {
+        linkClass: "topnav",
+        SubmitText: model.helpTabLabel
+    }
+
+    try {
+        let help = new CustomerSupport("#supportTicketLink", "DocsAppIframeLod", options, {});
+        help.createLink();
+        let $link = $("#cslink_supportlink");
+        $link.attr("aria-label", $link.text() + " (opens a new window)");
+
+        $("#cslink_supportlink").unbind("click").bind("click", function (e) {
+            e.preventDefault();
+
+            $.ajax({
+                type: "POST",
+                dataType: "json",
+                cache: false,
+                url: "/Instructions/GetHelpContext/" + model.id
+            }).always(async function (response) {
+                if (response.Success) {
+                    let payload = {
+                        "Organization": response.Result.Organization,
+                        "FirstName": response.Result.FirstName,
+                        "LastName": response.Result.LastName,
+                        "Email": response.Result.Email,
+                        "Username": response.Result.Username,
+                        "CompanyId": response.Result.CompanyId,
+                        "SiteBaseUrl": response.Result.BaseUrl,
+                        "UserProfileUrl": response.Result.UserProfileUrl,
+                        "Roles": response.Result.Roles,
+                        "ManagedOrganizations": response.Result.ManagedOrganizations,
+                        "LastPageVisited": window.location.href,
+                        "StartingPlatform": response.Result.StartingPlatform,
+                        "RelativeUrl": window.location.pathname
+                    }
+
+                    help.appendData(payload);
+                    help.options.baseUrl = response.Result.BaseUrl;
+                    let form = await help.createForm(help.options, help.payload);
+                    form.submit();
+                }
+            });
+        });
+    }
+    catch (err) {
+        // something might be wrong with the external support link.
+        return;
+    }
+});

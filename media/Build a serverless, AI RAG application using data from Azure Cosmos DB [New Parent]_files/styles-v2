@@ -1,0 +1,466 @@
+:root {
+    --logo-width: 65px;
+    --logo-height: 24px;
+    --lab-name-display: block;
+    --logo-display: none;
+    --text-color: #FFFFFF;
+    --page-background-color: #333333;
+    --page-header-background-color: #222222;
+    --page-header-text-color: #FFFFFF;
+    --instructions-footer-background-color: #222222;
+    --primary-color: #00CA72;
+    --primary-color-low-opacity: rgb(0, 202, 114, .38);
+    --primary-color-background-text-color: #FFFFFF;
+    --heading-color: #FFFFFF;
+    --link-color: #00CA72;
+    --accent-background-color: #444444;
+    --accent-background2-color: #666666;
+    --accent-border-color: #888888;
+    --positive-feedback-color: #00CA72;
+    --negative-feedback-color: #ff3139;
+    --menu-background-color: #444444;
+    --menu-item-color: #FFFFFF;
+    --menu-item-hover-background-color: rgba(255, 255, 255, 0.075);
+    --virtualization-header-background-color: #222222;
+    --virtualization-header-text-color: #FFFFFF;
+    --virtualization-menu-background-color: #222222;
+    --virtualization-menu-item-text-color: #FFFFFF;
+    --virtualization-menu-item-hover-background-color: #444444;
+    --virtualization-menu-icon-color: #00CA72;
+    --virtualization-menu-divider-color: rgb(0, 202, 114, .38);
+    --chat-response-background-color: #222222;
+    --page-nNavigation-button-background-color: #333333;
+    --page-navigation-button-text-color: #00CA72;
+    --page-navigation-button-border-color: #00CA72;
+    --page-navigation-button-hover-background-color: rgba(255, 255, 255, 0.075);
+    --checkbox-check-color: #333333;
+    --checkbox-border-color: #00CA72;
+    --checkbox-background-color: #333333;
+    --checkbox-checked-background-color: #00CA72;
+    --input-border-color: #DDDDDD;
+    --input-background-color: #444444;
+    --scrollbar-track-color: #666666;
+    --scrollbar-face-color: #AAAAAA;
+    --button-background-color: #666666;
+    --button-text-color: #FFFFFF;
+    --button-hover-background-color: #555555;
+    --primary-button-background-color: #00CA72;
+    --primary-button-text-color: #FFFFFF;
+    --primary-button-hover-background-color: #2FA869;
+    --alert-block-color: #FF3139;
+    --help-block-color: #9575CD;
+    --hint-block-color: #FFBF42;
+    --note-block-color: ;
+    --code-block-background-color: #222222;
+    --code-block-title-background-color: #444444;
+    --table-border-color: #444444;
+    --notification-background-color: #222222;
+}
+
+@font-face {
+    font-family: 'theme-font';
+    font-style: normal;
+    font-weight: 400;
+    src: url(https://fonts.gstatic.com/s/inter/v13/UcC73FwrK3iLTeHuS_fvQtMwCp50KnMa1ZL7.woff2) format('woff2');
+}
+
+@font-face {
+    font-family: 'theme-heading-font';
+    font-style: normal;
+    font-weight: 400;
+    src: url(https://fonts.gstatic.com/s/inter/v13/UcC73FwrK3iLTeHuS_fvQtMwCp50KnMa1ZL7.woff2) format('woff2');
+}
+
+body, html, .page-background-color, #fullScreenMessageMask {
+    background-color: var(--page-background-color);
+    color: var(--text-color);
+}
+
+.lab-client-header {
+    background-color: var(--page-header-background-color);
+    color: var(--page-header-text-color);
+}
+
+.instructions-footer {
+    background-color: var(--instructions-footer-background-color);
+}
+
+.theme-logo {
+    width: var(--logo-width);
+    height: var(--logo-height);
+    background-image: url("data:image/svg+xml;base64,");
+    background-repeat: no-repeat;
+    background-position: center left;
+    background-size: contain;
+    display: var(--logo-display);
+}
+
+.lab-name {
+    display: var(--lab-name-display);
+}
+
+.exit-button {
+    color: var(--page-header-text-color);
+}
+
+.exit-button::before {
+    color: var(--page-header-text-color) !important;
+}
+
+.primary-color,
+.page h1.primary-color,
+hr,
+.primary-color-icon,
+.primary-color-icon::before,
+.icon-link:before,
+details > summary::after,
+blockquote.knowledge:before,
+.ai-completion-type-selector .option::before,
+.ai-output::before,
+.ai-output .buttons .collapse,
+.copyable::before,
+.typeText::before,
+.special-action-link::before,
+:not(pre) > code:not(.nocopy)::before,
+.text-size-choice .checkbox {
+    color: var(--primary-color);
+}
+
+.primary-color-svg {
+    fill: var(--primary-color);
+}
+
+.page h1, .page h2, .page h3, .page h4, .page h5, .page h6 {
+    font-family: 'theme-heading-font', sans-serif;
+    color: var(--heading-color);
+}
+
+a {
+    color: var(--link-color);
+}
+
+input, textarea, select {
+    color: var(--text-color);
+    border-color: var(--input-border-color);
+    background-color: var(--input-background-color);
+}
+
+.special-action-link, .copyable, .typeText, #settings-menu .link-list-item a, a.link-list-item {
+    color: var(--text-color);
+}
+
+.task-list-item .checkbox input + span::before, .activity .answer label input {
+    color: var(--checkbox-check-color);
+    border-color: var(--checkbox-border-color);
+    background-color: var( --checkbox-background-color);
+}
+
+.task-list-item .checkbox input:checked + span::before, .activity .answer label input:checked {
+    background-color: var(--checkbox-checked-background-color);
+    border-color: var(--checkbox-border-color);
+}
+
+.primary-color-border, input:focus, textarea:focus, select:focus, .activity .answer label input, .machine.selected, .contentResource.selected, .container.selected, .endpoint.selected {
+    border-color: var(--primary-color);
+}
+
+.primary-color-low-opacity-border,
+.moreKnowledge, blockquote.knowledge,
+.special-action-link,
+.copyable,
+.typeText {
+    border-color: var(--primary-color-low-opacity);
+}
+
+.primary-color-background, .ai-chat .message.user, .tree-node.selected > .node-name {
+    background-color: var(--primary-color);
+    color: var(--primary-color-background-text-color);
+}
+
+.primary-color-background a {
+    color: var(--primary-color-background-text-color);
+}
+
+.primary-color-low-opacity-background {
+    background-color: var(--primary-color-low-opacity);
+}
+
+.menu {
+    color: var(--menu-item-color);
+    background-color: var(--menu-background-color);
+}
+
+.menu .menu-item:hover {
+    background-color: var(--menu-item-hover-background-color);
+}
+
+.virtualization-menu {
+    color: var(--virtualization-menu-item-text-color);
+    background-color: var(--virtualization-menu-background-color);
+}
+
+.virtualization-menu .menu-item:hover {
+    background-color: var(--virtualization-menu-item-hover-background-color);
+}
+
+.virtualization-menu .parent-menu::after,
+.virtualization-menu .menu-item::before,
+.virtualization-menu-heading {
+    color: var(--virtualization-menu-icon-color);
+}
+
+.virtualization-menu .virtualization-menu-divider {
+    border-color: var(--virtualization-menu-divider-color);
+}
+
+.virtualization-client .title-bar {
+    background-color: var(--virtualization-header-background-color);
+    color: var(--virtualization-header-text-color);
+}
+
+.instructions-navigation .previous-button, .instructions-navigation .next-button {
+    color: var(--page-navigation-button-text-color);
+    background-color: var(--page-nNavigation-button-background-color);
+    border-color: var(--page-navigation-button-border-color);
+}
+
+.instructions-navigation .previous-button:hover, .instructions-navigation  .next-button:hover {
+    background-color: var(--page-navigation-button-hover-background-color);
+}
+
+details {
+    border-color: var(--primary-color-low-opacity);
+}
+
+.accent-color {
+    color: #888888;
+}
+
+.accent-border, blockquote {
+    border-color: var(--accent-border-color);
+}
+
+blockquote.expandable {
+    border-color: var(--primary-color);
+    background-color:var(--page-background-color);
+}
+
+.accent-background, blockquote, .activity .feedback {
+    background-color: var(--accent-background-color);
+}
+
+.accent-background-2 {
+    background-color: var(--accent-background2-color);
+}
+
+button, input[type="button"], label.button {
+    background-color: var(--button-background-color);
+    color: var(--button-text-color);
+}
+
+button:not(:disabled):hover, input[type="button"]:not(:disabled):hover, label.button:not(:disabled):hover {
+    background-color: var(--button-hover-background-color);
+}
+
+button.primary, input[type="button"].primary, label.button.primary {
+    background-color: var(--primary-button-background-color);
+    color: var(--primary-button-text-color);
+}
+
+button.primary:not(:disabled):hover, input[type="button"].primary:not(:disabled):hover, label.button.primary:not(:disabled):hover {
+    background-color: var(--primary-button-hover-background-color);
+}
+
+.loadingAnimation-large, .loadingAnimation-medium, .loadingAnimation-small {
+    border-color: var(--primary-color-low-opacity);
+    border-top-color: var(--primary-color);
+}
+
+blockquote.alert {
+    border-color: var(--alert-block-color);
+}
+
+blockquote.alert::before, .activity .feedback.negative:before, .error-message, blockquote.alert > details > summary::after {
+    color: var(--alert-block-color);
+}
+
+blockquote.help {
+    border-color: var(--help-block-color);
+}
+
+blockquote.help::before, blockquote.help > details > summary::after {
+    color: var(--help-block-color);
+}
+
+blockquote.hint {
+    border-color: var(--hint-block-color);
+}
+
+blockquote.hint::before, blockquote.hint > details > summary::after {
+    color: var(--hint-block-color);
+}
+
+blockquote.note {
+    border-color: var(--note-block-color);
+}
+
+blockquote.note::before, blockquote.note > details > summary::after {
+    color: var(--note-block-color);
+}
+
+blockquote.knowledge.collapsed::after {
+    background: linear-gradient(transparent, var(--page-background-color));
+}
+
+.ai-chat .message.ai {
+    background-color: var(--chat-response-background-color);
+}
+
+.listedNotification {
+    background-color: var(--accent-background-color);
+}
+
+.negative {
+    color: var(--negative-feedback-color);
+}
+
+.positive {
+    color: var(--positive-feedback-color);
+}
+
+.thumbs-up::before, .thumbs-down::before {
+    color: var(--text-color);
+}
+
+.thumbs-up.selected::before {
+    color: var(--positive-feedback-color);
+    border-color: var(--positive-feedback-color);
+}
+
+.thumbs-down.selected::before {
+    color: var(--negative-feedback-color);
+    border-color: var(--negative-feedback-color);
+}
+
+.activity .feedback.positive:before,
+.activity .scriptTask.pass .response,
+.activity .scriptTask.pass .result:before,
+.activityResult.pass .result:before,
+.activityResult .scriptTask.pass .result:before
+{
+    color: var(--positive-feedback-color);
+}
+
+.activity .scriptTask.pass .result:before,
+.activityResult .scriptTask.pass .result:before,
+.activityResult .answer.correct label,
+.activityResult.pass .result:before {
+    border-color: var(--positive-feedback-color);
+}
+
+.activityResult .answer.incorrect label {
+    border-color: var(--negative-feedback-color);
+}
+
+.activityResult.fail .result::before,
+.activityResult .scriptTask.fail.withResult .result:before {
+    border-color: var(--negative-feedback-color);
+    color: var(--negative-feedback-color);
+}
+
+.clickFeedbackMessage {
+    background-color: var(--primary-color);
+    color: var(--primary-color-background-text-color);
+}
+
+code {
+    background-color: var(--code-block-background-color);
+}
+
+.codeTitle {
+    background-color: var(--code-block-title-background-color);
+}
+
+.page table thead tr {
+    border-bottom-color: var(--table-border-color);
+}
+
+.page table tr:not(:last-child) {
+    border-bottom-color: var(--table-border-color);
+}
+
+.notification {
+    background-color: var(--notification-background-color);
+}
+
+.dialogMask, .modal-menu-mask {
+    background-color: var(--text-color);
+}
+
+.dialogBox {
+    background-color: var(--page-background-color);
+    border-color: var(--page-background-color);
+}
+
+.activity .scriptTask .result:before {
+    border-color: var(--text-color);
+    background-color: var(--page-background-color);
+}
+
+body {
+    scrollbar-face-color: var(--scrollbar-face-color);
+    scrollbar-shadow-color: var(--scrollbar-track-color);
+    scrollbar-highlight-color: var(--scrollbar-track-color);
+    scrollbar-3dlight-color: var(--scrollbar-track-color);
+    scrollbar-darkshadow-color: var(--scrollbar-track-color);
+    scrollbar-track-color: var(--scrollbar-track-color);
+    scrollbar-arrow-color: var(--scrollbar-face-color);
+}
+
+::-webkit-scrollbar-track {
+    background-color: var(--scrollbar-track-color);
+}
+
+::-webkit-scrollbar-thumb {
+    background-color: var(--scrollbar-face-color);
+}
+
+input[type=range]::-webkit-slider-runnable-track {
+    background-color: var(--scrollbar-track-color);
+}
+
+input[type=range]::-webkit-slider-thumb {
+    background-color: var(--scrollbar-face-color);
+}
+
+input[type=range]::-moz-range-track {
+    background-color: var(--scrollbar-track-color);
+}
+
+input[type=range]::-moz-range-thumb {
+    background-color: var(--scrollbar-face-color);
+}
+
+input[type=range]::-ms-thumb {
+    background-color: var(--scrollbar-face-color);
+}
+
+-webkit-scrollbar-corner {
+    background-color: var(--page-background-color);
+}
+
+#splitter {
+    background-color: #222;
+}
+
+/* AUTHORING */
+
+.tree-node > .node-name:hover {
+    background-color: var(--button-hover-background-color);
+}
+
+.tree-node.selected > .node-name {
+    background-color: var(--primary-button-background-color);
+    color: var(--primary-button-text-color);
+}
+

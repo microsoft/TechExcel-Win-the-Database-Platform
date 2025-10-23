@@ -1,0 +1,1418 @@
+<!DOCTYPE html>
+<!-- saved from url=(0080)https://labclient.labondemand.com/LabClient/e013c27b-7e28-4b7b-a514-ffe8a76c35a1 -->
+<html lang="en-US" dir="ltr"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width">
+    <title>Build a serverless, AI RAG application using data from Azure Cosmos DB [New Parent]</title>
+    <link rel="shortcut icon" href="https://labclient.labondemand.com/images/favicon-32x32.png">
+    <script async="" src="./Build a serverless, AI RAG application using data from Azure Cosmos DB [New Parent]_files/datadog-logs.js.download"></script><script async="" src="./Build a serverless, AI RAG application using data from Azure Cosmos DB [New Parent]_files/pendo.js.download"></script><script src="./Build a serverless, AI RAG application using data from Azure Cosmos DB [New Parent]_files/jquery.min.js.download"></script>
+    <script src="./Build a serverless, AI RAG application using data from Azure Cosmos DB [New Parent]_files/jquery-ui.min.js.download"></script>
+    <link href="./Build a serverless, AI RAG application using data from Azure Cosmos DB [New Parent]_files/jquery-ui.css" rel="stylesheet">
+    <script src="./Build a serverless, AI RAG application using data from Azure Cosmos DB [New Parent]_files/jquery.timepicker.min.js.download"></script>
+    <link rel="stylesheet" type="text/css" href="./Build a serverless, AI RAG application using data from Azure Cosmos DB [New Parent]_files/jquery.timepicker.css">
+    <style>
+        html, body {
+            height: 100%;
+            width: 100%;
+            padding: 0;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        #consoleWrapper {
+            position: absolute;
+            height: 100%;
+        }
+
+        #instructionsWrapper {
+            position: absolute;
+            height: 100%;
+            top: 0;
+            right: 0;
+        }
+
+            #instructionsWrapper:dir(rtl) {
+                right: auto;
+                left: 0;
+            }
+
+        #consoleIFrame, #instructionsIFrame {
+            width: 100%;
+            height: 100%;
+            border-style: none;
+        }
+
+        #instructionsIframe {
+            padding-left: 4px;
+            box-sizing: border-box;
+        }
+
+            #instructionsIframe:dir(rtl) {
+                padding-left: 0;
+                padding-right: 4px;
+            }
+
+        #splitter {
+            position: absolute;
+            z-index: 1;
+            cursor: ew-resize;
+            width: 3px;
+            background-color: #000;
+            height: 100%;
+        }
+
+            #splitter .splitter-handle {
+                box-sizing: border-box;
+                position: absolute;
+                left: -4px;
+                top: 50%;
+                transform: translateY(-50%);
+                height: 19px;
+                width: 11px;
+                background: inherit;
+                padding: 2px 0;
+                border-radius: 3px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: #888;
+            }
+
+                #splitter .splitter-handle .splitter-handle-grip {
+                    height: 100%;
+                }
+
+        .ui-draggable-dragging {
+            opacity: 0;
+        }
+
+    </style>
+    <link href="./Build a serverless, AI RAG application using data from Azure Cosmos DB [New Parent]_files/lab-client-layout-v2.css" rel="stylesheet" type="text/css">
+    <link id="themeStylesheet" href="./Build a serverless, AI RAG application using data from Azure Cosmos DB [New Parent]_files/styles-v2" rel="stylesheet">
+    <script>
+
+        var consoleWrapper;
+        var consoleWindow;
+        var instructionsWrapper;
+        var instructionsWidth = 400;
+        var instructionsLabClient;
+        var instructionsLoaded = false;
+        var consoleLoaded = false;
+        var externalInstructionsWindow = null;
+        var layoutVersion = 2;
+        var isRtl = false;
+
+        $(function () {
+            consoleWrapper = document.getElementById("consoleWrapper");
+            instructionsWrapper = document.getElementById("instructionsWrapper");
+            instructionsWrapper.style.width = instructionsWidth + "px";
+            consoleWrapper.style.width = ($(window).width() - instructionsWidth) + "px";
+            consoleWindow = document.getElementById("consoleIFrame").contentWindow;
+            isRtl = window.getComputedStyle(document.getElementById('consoleWrapper'), null).getPropertyValue('direction') == "rtl";
+
+            setSplitterAriaValue(instructionsWidth,  $(window).width());
+
+            $(window).on("#fullScreenMessage").keydown(function (e) {
+                if (!$("#fullScreenMessage").is(":visible"))
+                    return;
+                if (e.which === 27) { //esc
+                    $("#fullScreenMessage").find(".escape").click();
+                }
+
+                if (e.which === 9) { //tab
+                    var $focusable = $("#fullScreenMessage").find('a[href]:not([tabindex^="-"]), area[href]:not([tabindex^="-"]), input:not([type="hidden"]):not([type="radio"]):not([disabled]):not([tabindex^="-"]), input[type="radio"]:not([disabled]):not([tabindex^="-"]):checked, select:not([disabled]):not([tabindex^="-"]), textarea:not([disabled]):not([tabindex^="-"]), button:not([disabled]):not([tabindex^="-"]), iframe:not([tabindex^="-"]), audio[controls]:not([tabindex^="-"]), video[controls]:not([tabindex^="-"]), [contenteditable]:not([tabindex^="-"]), [tabindex]:not([tabindex^="-"])').filter(":visible");
+                    if ($focusable.length === 0) {
+                        e.preventDefault();
+                        return;
+                    }
+                    if (e.shiftKey && document.activeElement === $focusable[0]) {
+                        e.preventDefault();
+                        $focusable[$focusable.length - 1].focus();
+                    } else if (!e.shiftKey && document.activeElement === $focusable[$focusable.length - 1]) {
+                        e.preventDefault();
+                        $focusable[0].focus();
+                    }
+                }
+            });
+
+            $("#splitter").draggable({
+                helper: "clone",
+                appendTo: "body",
+                iframeFix : true,
+                axis: "x",
+                zIndex: 10,
+                scroll: false,
+                start: function () {
+
+                },
+                drag: function (event, ui) {
+                    var totalWidth = $(window).width();
+                    var offsetWidth = isRtl ? totalWidth - ui.offset.left : ui.offset.left;
+                    consoleWidth = offsetWidth;
+                    if (consoleWidth < 300) { consoleWidth = 300; }
+                    if (totalWidth - consoleWidth < 300) { consoleWidth = Math.max(300, totalWidth - 300); }
+                    consoleWrapper.style.width = consoleWidth + "px";
+                    instructionsWidth = $(window).width() - consoleWidth;
+                    instructionsWrapper.style.width = instructionsWidth + "px";
+                },
+                stop: function () {
+                    if (instructionsWidth == null || isNaN(instructionsWidth) || instructionsWidth < 0) { return;}
+                    setSplitterAriaValue(instructionsWidth,  $(window).width());
+                    var url = "/VirtualizationClient/ChangeNavBarWidth/55844333?width=" + instructionsWidth;
+                    $.ajax({
+                        type: "POST",
+                        dataType: "json",
+                        data: {},
+                        cache: false,
+                        url: url
+                    }).always(function (response) {
+                    });
+                }
+            });
+
+            $(".splitter-handle").on("keydown", function(e) {
+                let totalWidth = $(window).width(),
+                    consoleWidth = totalWidth - instructionsWidth,
+                    distance = 10; //pixels moved on each press
+
+                // Reposition if one of the directional keys is pressed
+                switch (e.keyCode) {
+                    case 37:
+                    case 38: consoleWidth -= distance; break; // Left/Up
+                    case 39:
+                    case 40: consoleWidth += distance; break; // Right/Down
+                    default: return true; // Exit and bubble
+                }
+
+                // The minimum width of each frame is 250px
+                consoleWidth = Math.min(Math.max(250, consoleWidth), totalWidth - 250);
+                consoleWrapper.style.width = consoleWidth + "px";
+                instructionsWidth = totalWidth - consoleWidth;
+                instructionsWrapper.style.width = instructionsWidth + "px";
+                setSplitterAriaValue(instructionsWidth, totalWidth);
+
+                // Don't scroll page
+                e.preventDefault();
+            });
+
+                //for zoom change detection
+            var px_ratio = window.devicePixelRatio || window.screen.availWidth / document.documentElement.clientWidth;
+
+            function isZooming() {
+                var newPx_ratio = window.devicePixelRatio || window.screen.availWidth / document.documentElement.clientWidth;
+                if (newPx_ratio != px_ratio) {
+                    px_ratio = newPx_ratio;
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+
+            $(window).resize(function () {
+                if (externalInstructionsWindow == null) {
+                    var windowWidth = $(window).width();
+                    consoleWrapper.style.width = (windowWidth - instructionsWidth) + "px";
+                    setSplitterAriaValue(instructionsWidth, windowWidth);
+                }
+                if (isZooming()) {
+                    var consoleWrapperWidth = $(consoleWrapper).width()
+                    if (consoleWrapperWidth < 300) {
+                        console.log("Environment area too small upon zoom change, resizing to 300px.");
+                        consoleWrapper.style.width = "300px";
+                        instructionsWidth = $(window).width() - 300;
+                        instructionsWrapper.style.width = instructionsWidth + "px";
+                    } else {
+                        instructionsWidth = $(window).width() - consoleWrapperWidth;
+                        if (instructionsWidth < 300) {
+                            console.log("Instructions area too small upon zoom change, resizing to 300px.");
+                            instructionsWidth = 300;
+                            instructionsWrapper.style.width = instructionsWidth + "px";
+                            consoleWrapper.style.width = ($(window).width() - instructionsWidth) + "px";
+                        }
+                    }
+                }
+            });
+
+            $(window).on("unload", function () {
+                if (externalInstructionsWindow != null) {
+                    externalInstructionsWindow.close();
+                    if (window.opener && resizedForExternalInstructionsWindow) {
+                        if (!screenIsMaximized() && !screenIsMinimized()) {
+                            window.resizeBy(instructionsWidth, 0);
+                        }
+                        resizedForExternalInstructionsWindow = false;
+                    }
+                }
+            });
+
+            $("#closeWindow").click(function () {
+                try {
+                    window.close();
+                } catch (e) {
+                    //
+                }
+            });
+        })
+
+        function copyableClicked(element) {
+            var $element = $(element);
+            var text = $element.text();
+            $("#copyInput").show();
+            $("#copyInput").val(text).select();
+            var offset = $element.offset();
+            var x = offset.left;
+            var y = offset.top - 40;
+            try {
+                var successful = document.execCommand("copy");
+                if (successful) {
+                    showClickFeedbackMessage("Copied to clipboard", x, y, 2000);
+                } else {
+                    showClickFeedbackMessage("Copying was unsuccessful", x, y, 2000);
+                }
+            } catch (err) {
+                showClickFeedbackMessage("Copying was unsuccessful", x, y, 2000);
+                console.log("Unable to copy. " + err);
+            }
+            $("#copyInput").hide();
+        }
+
+        function showClickFeedbackMessage(text, x, y, duration) {
+            var $message = $("<div class='clickFeedbackMessage noselect' role='alert'>" + text + "</div>");
+            $message.appendTo($("body")).hide();
+            $message.css({ left: x, top: y });
+            $message.fadeIn("fast");
+            window.setTimeout(function () {
+                $message.fadeOut("fast", function () { $message.remove(); });
+            }, duration);
+        }
+
+        function isClientWrapper() {
+            return true;
+        }
+
+        function updateTimer(minutesRemaining, isShareExpiration) {
+            instructionsLabClient.updateTimer(minutesRemaining, isShareExpiration);
+            if (externalInstructionsWindow != null) {
+                document.getElementById("instructionsIFrame").contentWindow.labClient.updateTimer(minutesRemaining, isShareExpiration);
+            }
+        }
+
+        function showNotification(notification, persistent, id) {
+            if (notification.content) { //the new way of passing notifications
+                instructionsLabClient.showNotification(notification);
+            } else { //backward compat
+                instructionsLabClient.showNotification({ content: notification, persistent: persistent, id: id});
+            }
+        }
+
+        var fullScreenMessageShown;
+        var examResultDetailsShown;  //--- XXXX Temporarily here
+
+        function showFullScreenMessage(options) {
+            if (consoleLoaded && consoleWindow && consoleWindow.labConsole && consoleWindow.labConsole.prepareForFullScreenMessage) {
+                consoleWindow.labConsole.prepareForFullScreenMessage();
+            }
+            var $dialog = $("#fullScreenMessage");
+            $dialog.show();
+            fullScreenMessageShown = true;
+            if (options) {
+                $("#fullScreenMessageTitle").html(options.title ? options.title : "").removeAttr("tabindex");;
+                $("#fullScreenMessageText").html(options.message ? options.message : "");
+                if (options.showLoadingImage) {
+                    $("#fullScreenMessage").addClass("withLoadingImage");
+                } else {
+                    $("#fullScreenMessage").removeClass("withLoadingImage");
+                }
+                var $buttonWrapper = $("#fullScreenMessageButtonWrapper");
+                if (options.buttons || (options.showCloseWindowButton && window.opener)) {
+                    $buttonWrapper.show();
+                    if (options.showCloseWindowButton && window.opener) {
+                        $("#closeWindow").show();
+                        if (options.buttons) {
+                            $("#closeWindow").removeClass("primary");
+                        } else {
+                            $("#closeWindow").addClass("primary");
+                        }
+                    } else {
+                        $("#closeWindow").hide();
+                    }
+                    var $buttons = $("#fullScreenMessageButtons");
+                    $buttons.html("");
+                    if (options.buttons) {
+                        for (var i = 0; i < options.buttons.length; i++) {
+                            var button = options.buttons[i];
+                            var $button = $('<input type="button" value="' + button.text + '" />');
+                            if (button.click) {
+                                $button.click(button.click);
+                            }
+                            if (button.primary) {
+                                $button.addClass("primary");
+                            }
+                            if (button.escape) {
+                                $button.addClass("escape");
+                            }
+                            $buttons.append($button);
+                        }
+                    }
+                    $buttonWrapper.find("input.escape").focus();
+                } else {
+                    $buttonWrapper.hide();
+                    $("#fullScreenMessageTitle").attr("tabindex", "0");
+                    $("#fullScreenMessageTitle")[0].blur(); //in case title already had focus, we need to remove focus so screen readers pick up the change in text
+                    $("#fullScreenMessageTitle")[0].focus();
+                }
+                if (options.open) {
+                    options.open();
+                }
+            }
+            return {
+                close: close,
+                getElementById: function (elementId) {
+                    var $element = $dialog.find("#" + elementId);
+                    if ($element.length > 0) return $element[0];
+                    return null;
+                }
+            }
+        }
+
+        function hideFullScreenMessage() {
+            if (instructionsLoaded && consoleLoaded) {
+                $("#fullScreenMessage").hide();
+                fullScreenMessageShown = false;
+                consoleWindow.labConsole.recoverFromFullScreenMessage();
+                instructionsLabClient.setupKnowledgeExpanders();
+            }
+        }
+
+        function getFullScreenMessage() {
+            return $("#fullScreenMessage");
+        }
+
+        var complete = false;
+        var closing = false;
+
+        function labIsComplete() {
+            if (complete == true) return;
+            complete = true;
+            $("#modalDialog").remove();
+            if (externalInstructionsWindow != null) {
+                externalInstructionsWindow.close();
+                instructionsLabClient = document.getElementById("instructionsIFrame").contentWindow.labClient;
+            }
+            consoleWindow.labConsole.labIsComplete();
+            instructionsLabClient.labIsComplete();
+            if (window.opener) {
+                try {
+                    window.opener.postMessage("labDone", "*");
+                } catch (e) {
+                    //
+                }
+            }
+            try {
+                if (window.parent && window.parent.labIsComplete) {
+                    window.parent.labIsComplete();
+                }
+            } catch (e) {
+
+            }
+        }
+
+        function getHelpExtensionsPlaceHolder() {
+            return instructionsLabClient.getHelpExtensionsPlaceHolder();
+        }
+
+        function getMainMenuExtensionsPlaceHolder() {
+            return instructionsLabClient.getMainMenuExtensionsPlaceHolder();
+        }
+
+        function getResourcesExtensionsPlaceHolder() {
+            return instructionsLabClient.getResourcesExtensionsPlaceHolder();
+        }
+
+        function getDeveloperToolsMenu() {
+            return instructionsLabClient.getDeveloperToolsMenu();
+        }
+
+        function getFullScreenProgressWrapper() {
+            return $("#fullScreenProgressWrapper");
+        }
+
+        function getFullScreenMessageContainer() {
+            return $("#fullScreenMessage");
+        }
+
+        function consoleHasLoaded() {
+            consoleLoaded = true;
+            if (instructionsLoaded && consoleWindow?.labConsole?.instructionsHaveLoaded) {
+                consoleWindow.labConsole.instructionsHaveLoaded();
+            }
+            return instructionsLabClient.consoleHasLoaded();
+        }
+
+        var resizedForExternalInstructionsWindow = false;
+        var instructionsScrollTop = null;
+        var instructionsZoom = 100;
+
+        function instructionsHaveLoaded() {
+            instructionsLoaded = true;
+            instructionsLabClient = document.getElementById("instructionsIFrame").contentWindow.labClient;
+            document.getElementById("consoleIFrame").src = "/VirtualizationClient/e013c27b-7e28-4b7b-a514-ffe8a76c35a1/?childClient=1";
+            window.setTimeout(function () {
+                if (!consoleLoaded ) {
+                    showFullScreenMessage({ title: ":-(", message: "The virtualization client could not be loaded" })
+                };
+            }, 10000);
+            var isIeOrEdge = navigator.userAgent.indexOf('Trident') >= 0 || navigator.userAgent.indexOf('Edge') >= 0;
+            if (!isIeOrEdge) {
+                var mainMenuExtensionsPlaceHolder = getMainMenuExtensionsPlaceHolder();
+                if (layoutVersion === 1) {
+                    mainMenuExtensionsPlaceHolder.append($('<div id="splitWindows" tabindex="0" role="button" class="menuItem link-list-item split-windows-link icon-link">Split Windows</div>'));
+                } else {
+                    mainMenuExtensionsPlaceHolder.append($('<div class="link-list-item"><a id="splitWindows" href="#" class="split-windows-link icon-link">Split Windows</a></div>'));
+                }
+                mainMenuExtensionsPlaceHolder.find("#splitWindows").on("click keypress", function (e) {
+                    if (!a11yClick(e)) return;
+                    splitWindows();
+                });
+            }            
+            if (consoleLoaded) {
+                 consoleWindow.labConsole.instructionsHaveLoaded();
+            }
+        }
+
+        window.setTimeout(function () {
+            if (!instructionsLoaded) {
+                showFullScreenMessage({ title: ":-(", message: "The instructions window could not be loaded" })
+            };
+        }, 10000);
+
+        function splitWindows() {
+            instructionsLabClient.closeSettingsMenu();
+            instructionsScrollTop = instructionsLabClient.getInstructionsScrollTop();
+            instructionsZoom = instructionsLabClient.getZoom();
+            var left = window.screenX + $(document).outerWidth();
+            if (window.opener) {
+                left -= instructionsWidth;
+            }
+            externalInstructionsWindow = window.open("/InstructionsWindow/e013c27b-7e28-4b7b-a514-ffe8a76c35a1", "instructions", "resizable=1, left=" + left + ", top=" + window.screenY + ", width=" + instructionsWidth + ", height=" + window.innerHeight);
+            externalInstructionsWindow.focus();
+            hideInstructionsForExternalWindow();
+        }
+
+        function hideInstructionsForExternalWindow() {
+            instructionsWrapper.style.display = "none";
+            consoleWrapper.style.width = "100%";
+            $("#splitter").hide();
+            if (window.opener && !resizedForExternalInstructionsWindow) {
+                window.resizeBy(-instructionsWidth, 0);
+                resizedForExternalInstructionsWindow = true;
+            }
+        }
+
+        function getInstructionsResourcesPlaceHolder() {
+            return document.getElementById("instructionsIFrame").contentWindow.labClient.getResourcesExtensionsPlaceHolder().html();
+        }
+
+        function externalInstructionsWindowLoaded() {
+            if (externalInstructionsWindow == null) { //most likely, the user has reloaded the instructions window, so we must re-establish the window reference
+                externalInstructionsWindow = window.open("", "instructions");
+                if (!externalInstructionsWindow) { return; }
+                hideInstructionsForExternalWindow();
+            }
+            var externalInstructionsLabClient = externalInstructionsWindow.getInstructionsFrameContentWindow().labClient;
+            var externalResourcesContainer = externalInstructionsLabClient.getResourcesExtensionsPlaceHolder();
+            var localInstructionsLabClient = document.getElementById("instructionsIFrame").contentWindow.labClient;
+            var localResources = localInstructionsLabClient.getResourcesExtensionsPlaceHolder();
+            localResources.children().each(function () {
+                externalResourcesContainer.append(this);
+            });
+            var externalHelpItems = externalInstructionsLabClient.getHelpExtensionsPlaceHolder();
+            var localHelpItems = localInstructionsLabClient.getHelpExtensionsPlaceHolder();
+            localHelpItems.children().each(function () {
+                externalHelpItems.append(this);
+            });
+            instructionsLabClient = externalInstructionsLabClient; //swap our active "instructionsLabClient" reference for the one in the external window rather than the one in the local iframe
+            localInstructionsLabClient.splitWindowOpened();
+            window.setTimeout(function () {
+                instructionsLabClient.setZoom(instructionsZoom);
+                instructionsLabClient.setInstructionsScrollTop(instructionsScrollTop);
+            }, 1);
+        }
+
+        function getInstructionsWindow() {
+            if (externalInstructionsWindow != null) {
+                return externalInstructionsWindow.getInstructionsFrameContentWindow();
+            }
+            return document.getElementById("instructionsIFrame").contentWindow;
+        }
+
+        function screenIsMaximized() {
+            return screen.availWidth - window.innerWidth === 0;
+        }
+
+        function screenIsMinimized() {
+            return document.hidden === true;
+        }
+
+        function externalInstructionsClosing() {
+            if (externalInstructionsWindow == null) return;
+            var externalInstructionsPageIndex = 0;
+            var externalInstructionsScrollTop = 0;
+            var externalInstructionsZoom = 100;
+            var externalInstructionsLastCompletedTaskIndex = 0;
+            var externalInstructionsCompletedTasksJson = null;
+
+            var externalLabClient = externalInstructionsWindow.getInstructionsFrameContentWindow().labClient;
+            var resources = externalLabClient.getResourcesExtensionsPlaceHolder();
+            var newResources = document.getElementById("instructionsIFrame").contentWindow.labClient.getResourcesExtensionsPlaceHolder();
+            resources.children().each(function () {
+                newResources.append(this);
+            });
+            var externalHelpItems = externalLabClient.getHelpExtensionsPlaceHolder();
+            var localHelpItems = document.getElementById("instructionsIFrame").contentWindow.labClient.getHelpExtensionsPlaceHolder();
+            externalHelpItems.children().each(function () {
+                localHelpItems.append(this);
+            });
+            externalInstructionsZoom = externalLabClient.getZoom(externalInstructionsScrollTop);
+            externalInstructionsPageIndex = externalLabClient.getInstructionsPageIndex();
+            externalInstructionsScrollTop = externalLabClient.getInstructionsScrollTop();
+            externalInstructionsLastCompletedTaskIndex = externalLabClient.getLastCompletedTaskIndex();
+            externalInstructionsCompletedTasksJson = externalLabClient.getCompletedTasksJson();
+
+            if (fullScreenMessageShown && !labIsComplete) {
+                hideFullScreenMessage();
+            }
+            externalInstructionsWindow = null;
+            if (window.opener && resizedForExternalInstructionsWindow) {
+                if (!screenIsMaximized() && !screenIsMinimized()) {
+                    window.resizeBy(instructionsWidth, 0);
+                }
+                resizedForExternalInstructionsWindow = false;
+            }
+            instructionsLabClient = document.getElementById("instructionsIFrame").contentWindow.labClient;
+            instructionsWrapper.style.display = "block";
+            consoleWrapper.style.width = ($(window).width() - instructionsWidth) + "px";
+            $("#splitter").show();
+
+            instructionsLabClient.selectInstructionsPage(externalInstructionsPageIndex);
+            instructionsLabClient.setLastCompletedTask(externalInstructionsLastCompletedTaskIndex);
+            instructionsLabClient.setCompletedTasksJson(externalInstructionsCompletedTasksJson);
+            window.setTimeout(function () {
+                instructionsLabClient.setZoom(externalInstructionsZoom);
+                instructionsLabClient.setInstructionsScrollTop(externalInstructionsScrollTop);
+            }, 1);
+        }
+
+        function setNavigationTab(tab) {
+            if (consoleHasLoaded) {
+                consoleWindow.labConsole.setNavigationTab(tab);
+            }
+            instructionsLabClient.selectTab(tab);
+        }
+
+        function navigationTabChanged(tab) {
+            if (consoleHasLoaded) {
+                consoleWindow.labConsole.setNavigationTab(tab);
+            }
+            if (externalInstructionsWindow) {
+                document.getElementById("instructionsIFrame").contentWindow.labClient.selectTab(tab);
+            }
+        }
+
+        function setTheme(themeName) {
+            if (!themeName) return;
+            $("#themeStylesheet").attr("href", "/css/" + themeName + ".css?v=9");
+            instructionsLabClient.setTheme(themeName);
+        }
+
+        function themeChanged(themeName, themeId, themeStyleSheetUrl) {
+            if (!themeName) return;
+            if (themeStyleSheetUrl) {
+                $("#themeStylesheet").attr("href", themeStyleSheetUrl);
+                document.getElementById("consoleIFrame").contentWindow.labConsole.setTheme(themeName, themeStyleSheetUrl);
+            } else {
+                $("#themeStylesheet").attr("href", "/css/" + themeName + ".css?v=9");
+                document.getElementById("consoleIFrame").contentWindow.labConsole.setTheme(themeName);
+            }
+            if (externalInstructionsWindow) {
+                document.getElementById("instructionsIFrame").contentWindow.labClient.setTheme(themeName);
+            }
+            if (window.opener) {
+                try {
+                    window.opener.postMessage({ action: "setTheme", themeId: themeId }, "*");
+                } catch (e) {
+                    //
+                }
+            }
+        }
+
+        function setVariables(variables) {
+            instructionsLabClient.setVariables(variables);
+        }
+
+        function getLabData() {
+            return instructionsLabClient.getLabData();
+        }
+
+        function addChildWindow(childWindow) {
+            instructionsLabClient.addChildWindow(childWindow);
+        }
+
+        function setAndSaveLabVariable(name, val) {
+            instructionsLabClient.setAndSaveVariable(name, val);
+        }
+
+        function getLabVariable(name) {
+            return instructionsLabClient.getVariable(name);
+        }
+
+        window.onbeforeunload = function () {
+            closing = true;
+        }
+
+        function childWindowClosing() {
+            if (!complete && !closing) {
+                closing = true;
+                window.location.reload();
+            }
+        }
+
+        function disableNavigationWarning() {
+            instructionsLabClient.disableNavigationWarning();
+            if (externalInstructionsWindow) {
+                document.getElementById("instructionsIFrame").contentWindow.labClient.disableNavigationWarning();
+            }
+        }
+
+        function typeText(text, canUseVmClipboard) {
+            if (canUseVmClipboard == null) canUseVmClipboard = false;
+            consoleWindow.labConsole.typeText(text, canUseVmClipboard);
+        }
+
+        function sendKeyCombo(keys) {
+            consoleWindow.labConsole.sendKeyCombo(keys);
+        }
+
+        function getSelectedMachine() {
+            return consoleWindow.labConsole.getSelectedMachine();
+        }
+
+        function getVmSize() {
+            return consoleWindow.labConsole.getVmSize();
+        }
+
+        function selectMachineById(id) {
+            consoleWindow.labConsole.selectMachineById(id, true);
+        }
+
+         function selectEndpointById(id) {
+            consoleWindow.labConsole.selectEndpointById(id, true);
+        }
+
+        function getMachineById(id) {
+            return consoleWindow.labConsole.getMachineByProfileId(id);
+        }
+
+        function reconnectToSelectedMachine() {
+            consoleWindow.labConsole.reconnectToSelectedMachine();
+        }
+
+        function loadOpticalMediaOnSelectedMachine(id) {
+            consoleWindow.labConsole.loadOpticalMediaOnSelectedMachine(id);
+        }
+
+        function loadFloppyMediaOnSelectedMachine(id) {
+            consoleWindow.labConsole.loadFloppyMediaOnSelectedMachine(id);
+        }
+
+        function executeCommandOnSelectedMachine(language, commandText) {
+            consoleWindow.labConsole.executeCommandOnSelectedMachine(language, commandText);
+        }
+
+        function sendCtrlAltDelete() {
+            consoleWindow.labConsole.sendCtrlAltDelete();
+        }
+
+        function fitWindowToConsole(width, height, callback) {
+            width += $("#instructionsWrapper").outerWidth();
+            var win = $(window);
+            if (width !== win.width() || height !== win.height()) {
+                window.resizeBy(-1, -1); //necessary if currently maximized.
+                window.setTimeout(function () {
+                    var widthDelta = width - win.width();
+                    var heightDelta = height - win.height();
+                    window.resizeBy(widthDelta, heightDelta);
+                }, 200);
+                if (callback) { callback(); }
+            }
+        }
+
+        function selectInstructionsPage(index) {
+            instructionsLabClient.selectInstructionsPage(index);
+        }
+
+        function setLastCompletedTask(index) {
+            instructionsLabClient.setLastCompletedTask(index);
+        }
+
+        function setCompletedTasksJson(completedTasksJson) {
+            instructionsLabClient.setCompletedTasksJson(completedTasksJson);
+        }
+
+        function getInstructionsScrollTop() {
+            return instructionsLabClient.getInstructionsScrollTop();
+        }
+
+        function setInstructionsScrollTop(y) {
+            instructionsLabClient.setInstructionsScrollTop(y);
+        }
+
+        function getInstructionsZoom() {
+            return instructionsLabClient.getZoom();
+        }
+
+        function setInstructionsZoom(zoom) {
+            instructionsLabClient.setZoom(zoom);
+        }
+
+        function selectTab(id) {
+            instructionsLabClient.selectTab(id);
+        }
+
+        function setNavigationBarWidth(width) {
+            instructionsWidth = width;
+            instructionsWrapper.style.width = instructionsWidth + "px";
+            let windowWidth = $(window).width();
+            consoleWrapper.style.width = (windowWidth - instructionsWidth) + "px";
+            setSplitterAriaValue(width, windowWidth);
+        }
+
+        function setSplitterAriaValue(instructionsWidth, windowWidth) {
+            let splitPercent = 100 - Math.round(100 * (instructionsWidth / windowWidth));
+            $(".splitter-handle").attr("aria-valuenow", splitPercent);
+        }
+
+        function pauseServerSync(val) {
+            consoleWindow.labConsole.pauseServerSync(val);
+        }
+
+        function a11yClick(event) {
+            if (event.type === 'click') {
+                return true;
+            }
+            else if (event.type === 'keypress') {
+                var code = event.charCode || event.keyCode;
+                if ((code === 32) || (code === 13)) {
+                    return true;
+                }
+            }
+            else {
+                return false;
+            }
+        }
+
+        function showDialog(options) {
+            if (!options) return;
+            var $dialog = $("#modalDialog");
+            var isUpdatedContent = false;
+            if ($dialog.length > 0) {
+                $dialog.find(".dialogContent").html("");
+                $dialog.find(".dialogButtons").html("");
+                isUpdatedContent = true;
+            } else {
+                $dialog = $('<div id="modalDialog" class="dialog" role="dialog" aria-modal="true" aria-labelledby="dialogTitle"><div class="dialogMask"></div><div class="dialogBox primary-color-border"><div class="dialog-header"><div id="dialogTitle" class="dialogTitle"></div><div class="dialogCloseButton" role="button" aria-label="Close" tabindex="0"></div></div><div class="dialogContent"></div><div class="dialogButtons"></div></div></div>');
+                $dialog.keydown(function (e) {
+                    if (e.which === 27) { //esc
+                        close();
+                    }
+                    if (e.which === 9) { //tab
+                        var $focusable = $dialog.find('a[href], area[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), button:not([disabled]), [tabindex="0"], iframe#contentDialogIFrame').filter(":visible");
+                        if ($focusable.length === 0) return;
+                        if (e.shiftKey && document.activeElement === $focusable[0]) {
+                            e.preventDefault();
+                            $focusable[$focusable.length - 1].focus();
+                        } else if (!e.shiftKey && document.activeElement === $focusable[$focusable.length - 1]) {
+                            e.preventDefault();
+                            $focusable[0].focus();
+                        }
+                    }
+                });
+                $dialog.on("click keypress", ".dialogContent img, .dialogContent.imageLink", function (e) {
+                    if (!a11yClick(e)) return;
+                    let $this = $(this);
+                    if ($this.parent().is("a")) return;
+                    e.preventDefault();
+                    e.stopImmediatePropagation();
+                    let imgUrl = $this.hasClass("imageLink") ? this.href : this.src;
+                    let url = "/Instructions/Image/" + getLabData().LabProfileId + "/?url=" + encodeURIComponent(imgUrl);
+                    if (this.title) {
+                        url += "&title=" + encodeURIComponent(this.title);
+                    }
+                    if (this.alt || this.text) {
+                        url += "&altText=" + encodeURIComponent(this.alt ? this.alt : this.text);
+                    }
+                    let imageWindow = window.open(url, "imageWindow", "menubar=no,location=no,resizable=yes,scrollbars=yes,status=no");
+                    addChildWindow(imageWindow);
+                    try {
+                        imageWindow.focus();
+                    } catch (e) {
+                        console.log("Error opening image window." + e);
+                    }
+                });
+            }
+            var $dialogBox = $dialog.find(".dialogBox");
+            var close = function () {
+                if (options.suppressDefaultClose && options.close) {
+                    options.close();
+                } else {
+                    var h = $dialogBox.outerHeight();
+                    var offset = $dialogBox.offset();
+                    $dialogBox.css("marginTop", 0).animate({ marginTop: -h - offset.top }, 300);
+                    $dialog.delay(200).fadeOut("fast", function () {
+                        $dialog.remove();
+                        if (options.close) {
+                            options.close();
+                        }
+                    });
+                }
+            }
+            $dialog.find(".dialogCloseButton").on("click keypress", function (e) {
+                if (!a11yClick(e)) return;
+                close();
+            });
+
+            if (options.minimumDisplaySeconds > 0) {
+                var $closeButton = $dialog.find(".dialogCloseButton").hide();
+                var $countDown = $("<div class='dialogCloseCountDown'>You can close this in " + options.minimumDisplaySeconds + " seconds...</div>").insertAfter($closeButton);
+                var secondsSpent = 0;
+                var closeDialogInterval = window.setInterval(function () {
+                    secondsSpent += 1;
+                    $countDown.html("You can close this in " + (options.minimumDisplaySeconds - secondsSpent) + " seconds...</div>");
+                    if (secondsSpent >= options.minimumDisplaySeconds) {
+                        window.clearInterval(closeDialogInterval);
+                        $countDown.hide();
+                        $dialog.find(".dialogCloseButton").show();
+                    }
+                }, 1000);
+            }
+
+            if (options.title) {
+                $dialog.find(".dialogTitle").html(options.title).show();
+            } else {
+                $dialog.find(".dialogTitle").hide();
+                $dialog.addClass("noTitle");
+            }
+            if (options.content) {
+                $dialog.find(".dialogContent").removeClass("noScroll").append(options.content);
+            } else if (options.url) {
+                var urlLower = options.url.toLowerCase();
+                if (urlLower.indexOf(".mp4") !== -1) {
+                    $dialog.find(".dialogContent").removeClass("noScroll").append('<video src="' + options.url + '" controls autoplay></video>');
+                } else if (urlLower.indexOf(".png") !== -1 || urlLower.indexOf(".jpg") !== -1 || urlLower.indexOf(".jpeg") !== -1 || urlLower.indexOf(".gif") !== -1) {
+                    $dialog.find(".dialogContent").removeClass("noScroll").append('<img src="' + options.url + '" controls></iframe>');
+                } else {
+                    $dialog.find(".dialogContent").addClass("noScroll").append('<iframe id="contentDialogIFrame" src="' + options.url + '" style="width:100%;height:100%;border:none;" allowfullscreen></iframe>');
+                }
+            } else {
+                $dialog.find(".dialogContent").hide();
+            }
+            if (options.buttons && options.buttons.length > 0) {
+                $dialog.addClass("hasButtons");
+                var $dialogButtons = $dialog.find(".dialogButtons");
+                var numButtons = options.buttons.length;
+                for (var i = 0; i < numButtons; i++) {
+                    var button = options.buttons[i];
+                    var $button = $('<input type="button" value="' + button.text + '" aria-label="' + button.text + '" />');
+                    if (button.click) {
+                        $button.click(button.click);
+                    }
+                    if (button.primary) {
+                        $button.addClass("primary");
+                    }
+                    if (button.closeDialog) {
+                        $button.click(close);
+                    }
+                    if (button.disabled) {
+                        $button.prop("disabled", true);
+                    }
+                    if (button.hidden) {
+                        $button.hide();
+                    }
+                    $dialogButtons.append($button);
+                }
+            }
+            if (!isUpdatedContent) {
+                $("body").append($dialog);
+                $dialog.hide().fadeIn("fast", function () {
+                    setTimeout(
+                        function () {
+                            var $inputs = $dialog.find(".dialogContent input");
+                            if ($inputs.length > 0) {
+                                $inputs[0].focus();
+                            } else {
+                                $primaryButton = $dialog.find(".dialogButtons input.primary");
+                                if ($primaryButton.length > 0) {
+                                    $primaryButton.focus();
+                                } else {
+                                    $dialog.find(".dialogCloseButton").focus();
+                                }
+                            }
+                            if (options.open) {
+                                options.open();
+                            }
+                        }, 100);
+
+                        $dialog.on("click keypress", ".copyable, code:not(.nocopy)", function (e) {
+                            if (!a11yClick(e)) return;
+                            if (e.offsetX > 0 && $(this).is("code") && $(this).parent().is("pre")) return; //for code blocks, only fire if the click is on the pseudo-element icon
+                            copyableClicked(this);
+                        });
+
+                });
+                var h = $dialogBox.outerHeight();
+                var offset = $dialogBox.offset();
+                $dialogBox.css("marginTop", -h - offset.top).animate({ marginTop: 0 }, 400);
+            } else if (options.open) {
+                window.setTimeout(options.open, 1);
+            }
+            return {
+                close: close,
+                getElementById: function (elementId) {
+                    var $element = $dialog.find("#" + elementId);
+                    if ($element.length > 0) return $element[0];
+                    return null;
+                },
+                getElementByClass: function (elementClass) {
+                    var $element = $dialog.find("." + elementClass);
+                    if ($element.length > 0) return $element[0];
+                    return null;
+                },
+                setupDatepicker: function (elementId, options) {
+                    var $element = $dialog.find("#" + elementId);
+                    $element.datepicker(options);
+                },
+                setupTimepicker: function (elementId, options) {
+                    var $element = $dialog.find("#" + elementId);
+                    $element.timepicker(options);
+                },
+                getDateFromDatePicker: function (elementId) {
+                    var $element = $dialog.find("#" + elementId);
+                    return $element.datepicker("getDate");
+                },
+                getButtons: function () {
+                    return $dialog.find(".dialogButtons input[type='button']");
+                },
+                hideButtons: function () {
+                    return $dialog.find(".dialogButtons").hide();
+                },
+                showButtons: function () {
+                    return $dialog.find(".dialogButtons").show();
+                },
+                getContent: function () {
+                    return $dialog.find(".dialogContent");
+                },
+                show: function () {
+                    $dialog.show();
+                },
+                hide: function () {
+                    $dialog.hide();
+                }
+            };
+        }
+
+        function closeDialog(animate = true) {
+            var $dialog = $("#modalDialog");
+            if ($dialog.length == 0) { return; }
+            var $dialogBox = $dialog.find(".dialogBox");
+            var h = $dialogBox.outerHeight();
+            var offset = $dialogBox.offset();
+            if (animate){
+                $dialogBox.css("marginTop", 0).animate({ marginTop: -h - offset.top }, 300);
+                $dialog.delay(200).fadeOut("fast", function () {
+                    $dialog.remove();
+                });
+            } else {
+                 $dialog.remove();
+            }
+        }
+
+        function hideDialogIfVisible() {
+            if($("#modalDialog").is(":visible")) {
+                $("#modalDialog").hide();
+            }
+        }
+
+        function showDialogIfHidden() {
+            if($("#modalDialog").is(":hidden")) {
+                $("#modalDialog").show();
+            }
+        }
+
+        function dialogIsActive() {
+            return $("#modalDialog").length > 0;
+        }
+
+        function showChooserDialog(options) {
+            if (!options || !options.url) return;
+
+            let dialogHtml = "<div id='chooserDialog' class='dialog hasButtons' role='dialog' aria-modal='true' aria-labelledby='dialogTitle'><div class='dialogMask'></div><div class='dialogBox'></iframe>";
+            if (2 == 2)
+                dialogHtml += "<div class='dialog-header'><div class='dialogTitle'>Choose Lab Series</div><div class='dialogCloseButton' role='button' aria-label='Close' tabindex='0'></div></div>";
+            else
+                dialogHtml += "<div class='dialogCloseButton' role='button' aria-label='Close' tabindex='0'></div><div class='dialogTitle'></div>";
+            dialogHtml += "<div class='dialogContent noScroll noPadding'><iframe class='contentDialogIFrame' style='width:100%;height:100%;border:none;' allowfullscreen></iframe></div><div class='dialogButtons'><input class='okButton primary' type='button' value='OK' aria-label='OK' /><input class='cancelButton'  type='button' value='Cancel' aria-label='Cancel' /></div><div class='dialogTabTrapper' tabindex='0' /></div></div>";
+            let $dialog = $(dialogHtml);
+
+            var getChoices = function (e) {
+                if (e.data && e.data.command === "getChoices") {
+                    if (options.choicesMade) {
+                        options.choicesMade(e.data.choices);
+                    }
+                }
+            };
+            window.addEventListener("message", getChoices, false);
+            var close = function () {
+                $dialog.remove();
+                window.removeEventListener("message", getChoices);
+                if (options.close) {
+                    options.close();
+                }
+            }
+            $dialog.find(".dialogCloseButton").on("click keypress", function (e) {
+                if (!a11yClick(e)) return;
+                close();
+            });
+            if (options.title) {
+                $dialog.find(".dialogTitle").html(options.title).show();
+            } else {
+                $dialog.find(".dialogTitle").hide();
+                $dialog.addClass("noTitle");
+            }
+            var $iframe = $dialog.find(".contentDialogIFrame");
+            $iframe.attr("src", options.url);
+            $okButton = $dialog.find(".dialogButtons .okButton").click(function () {
+                $iframe[0].contentWindow.postMessage({command:"getChoices"}, '*');
+            });
+            $dialog.find(".dialogButtons .cancelButton").click(function () {
+                close();
+            });
+            $("body").append($dialog);
+            $primaryButton = $dialog.find(".dialogButtons input.primary");
+            if ($primaryButton.length > 0) {
+                $primaryButton.focus();
+            } else {
+                $dialog.find(".dialogCloseButton").focus();
+            }
+            if (options.open) {
+                options.open();
+            }
+            return {
+                close:close,
+                show: function () {
+                    $dialog.show();
+                },
+                hide: function () {
+                    $dialog.hide();
+                }
+            }
+        }
+
+        function takeScreenshot(callback) {
+            var vm = consoleWindow.labConsole.getSelectedMachine();
+            if(vm.UseEnhancedSessionMode){
+                showFullScreenMessage({ title: "Not Supported", message: "Screenshots are not supported on Virtual Machines with Enhanced Session Mode enabled.", buttons: [{ text: "OK", click: hideFullScreenMessage, primary: true, escape: true }]  })
+                callback?.({ success: false, error: "Screenshots are not supported on Virtual Machines with Enhanced Session Mode enabled." });
+                return;
+            }
+            try {
+                var url = "/VirtualizationClient/TakeInstructionsScreenshot/55844333?machineId=" + vm.ProfileId;
+                $.ajax({
+                    type: "POST",
+                    dataType: "json",
+                    data: {},
+                    cache: false,
+                    url: url
+                }).always((response) => {
+                    if (!response?.Success) {
+                        var error = response && response.Error ? response.Error : "Sorry an error occurred";
+                        alert(error);
+                        callback?.({ success: false, error });
+                        return;
+                    }                    
+                    callback?.({ success: true, url: response.Url });
+                });
+            } catch (e) {
+                console.log(e);
+                alert("Sorry an error occurred");
+                callback?.({ success: false, error: "Sorry an error occurred" });
+            }
+        }
+
+        function getElementById(id) {
+            return document.getElementById(id);
+        }
+
+        function instructionsUpdated(rawContent) {
+            if (externalInstructionsWindow != null) {
+                var instructionsFrameWindow = externalInstructionsWindow.getInstructionsFrameContentWindow();
+                instructionsFrameWindow.postMessage({
+                    action: "updateInstructions",
+                    instructions: rawContent,
+                    bubbleToParent: false
+                }, "*");
+            }
+        }
+
+        function instructionsUpdatedFromSplitWindow(rawContent) {
+            var instructionsFrameWindow = document.getElementById("instructionsIFrame").contentWindow;
+            instructionsFrameWindow.postMessage({
+                action: "updateInstructions",
+                instructions: rawContent,
+                bubbleToParent: false
+            }, "*");
+        }
+
+        function getInstructionsEditWindow() {
+            return document.getElementById("instructionsIFrame").contentWindow.labClient.getInstructionsEditWindow();
+        }
+
+        function startVirtualizationServerSync(pollInterval){
+            consoleWindow.labConsole.startServerSync(pollInterval);
+        }
+
+        function setLabState(state) {
+            consoleWindow.labConsole.setLabState(state);
+            instructionsLabClient.setLabState(state);
+            if (externalInstructionsWindow != null) {
+                document.getElementById("instructionsIFrame").contentWindow.labClient.setLabState(state);
+            }
+        }
+
+        function selectContainerById(id) {
+            consoleWindow.labConsole.selectContainerById(id, true);
+            if (externalInstructionsWindow != null) {
+                document.getElementById("instructionsIFrame").contentWindow.labClient.containerSelected(id);
+            }
+        }
+
+        function containerSelected(containerId) {
+            instructionsLabClient.containerSelected(containerId);
+            if (externalInstructionsWindow != null) {
+                document.getElementById("instructionsIFrame").contentWindow.labClient.containerSelected(containerId);
+            }
+        }
+
+        function reconnectContainer(containerId) {
+            consoleWindow.labConsole.reconnectContainer(containerId);
+        }
+
+        function openContainerInNewWindow(containerId) {
+            consoleWindow.labConsole.openContainerInNewWindow(containerId);
+        }
+
+        function closeContainerWindow(containerId) {
+            consoleWindow.labConsole.closeContainerWindow(containerId);
+        }
+
+        function containerWindowClosed(containerId) {
+            instructionsLabClient.containerWindowClosed(containerId);
+            if (externalInstructionsWindow != null) {
+                document.getElementById("instructionsIFrame").contentWindow.labClient.containerWindowClosed(containerId);
+            }
+        }
+
+        function containerWindowOpened(containerId) {
+            instructionsLabClient.containerWindowOpened(containerId);
+            if (externalInstructionsWindow != null) {
+                document.getElementById("instructionsIFrame").contentWindow.labClient.containerWindowOpened(containerId);
+            }
+        }
+
+        function getContainersOpenInSeparateWindow() {
+            return consoleWindow.labConsole.getContainersOpenInSeparateWindow();
+        }
+
+        function setIgnoreVirtualMachineStateDuringSync(ignore) {
+            consoleWindow.labConsole.setIgnoreVirtualMachineStateDuringSync(ignore);
+        }
+
+        function updateReplacementTokens() {
+            instructionsLabClient.updateReplacementTokens();
+            if (externalInstructionsWindow != null) {
+                document.getElementById("instructionsIFrame").contentWindow.labClient.updateReplacementTokens();
+            }
+        }
+
+        //for monitor page
+        var labConsole = {
+            getConsoleSize: function () {
+                if (!consoleLoaded) return null;
+                var size = consoleWindow.labConsole.getConsoleSize();
+                if (size == null) return null;
+                size.width += $("#instructionsWrapper").outerWidth();
+                return size;
+            },
+            refreshDisplay: function () {
+                if (!consoleLoaded) return;
+                consoleWindow.labConsole.refreshDisplay();
+            }
+        };
+
+        function endLab(markComplete) {
+            //always call the child instructions window for this particular call
+            document.getElementById("instructionsIFrame").contentWindow.labClient.endLab(markComplete);
+        }
+
+        function saveLab() {
+            //always call the child instructions window for this particular call
+            document.getElementById("instructionsIFrame").contentWindow.labClient.saveLab();
+        }
+
+        function hideConsole() {
+            consoleWrapper.style.display = "none";
+            $("#instructionsWrapper").css("width", "100%");
+            $("#splitter").hide();
+            instructionsLabClient.integratedLayoutHidden();
+        }
+
+        function showConsole() {
+            consoleWrapper.style.display = "block";
+            instructionsWrapper.style.width = instructionsWidth + "px";
+            $("#splitter").show();
+            instructionsLabClient.integratedLayoutShown();
+        }
+
+        function openVirtualMachineInNewWindow(machineId) {
+            consoleWindow.labConsole.openMachineInNewWindow(machineId);
+        }
+
+    </script>
+</head>
+<body>
+    <div id="consoleWrapper" role="region" aria-label="Lab Workspace" style="width: 1280px;">
+        <iframe id="consoleIFrame" title="Lab Workspace" src="./Build a serverless, AI RAG application using data from Azure Cosmos DB [New Parent]_files/saved_resource.html"></iframe>
+    </div>
+    <div id="instructionsWrapper" role="region" aria-label="Lab Instructions" style="width: 400px;">
+        <div id="splitter" class="ui-draggable ui-draggable-handle">
+            <div class="splitter-handle" tabindex="0" role="separator" aria-orientation="vertical" aria-valuenow="76">
+                <svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="grip-lines-vertical" class="svg-inline--fa fa-grip-lines-vertical fa-w-8 splitter-handle-grip" role="presentation img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 512">
+                    <path fill="currentColor" d="M96 496V16c0-8.8-7.2-16-16-16H48c-8.8 0-16 7.2-16 16v480c0 8.8 7.2 16 16 16h32c8.8 0 16-7.2 16-16zm128 0V16c0-8.8-7.2-16-16-16h-32c-8.8 0-16 7.2-16 16v480c0 8.8 7.2 16 16 16h32c8.8 0 16-7.2 16-16z"></path>
+                </svg>
+            </div>
+        </div>
+        <iframe id="instructionsIFrame" src="./Build a serverless, AI RAG application using data from Azure Cosmos DB [New Parent]_files/e013c27b-7e28-4b7b-a514-ffe8a76c35a1.html" title="Lab Instructions"></iframe>
+    </div>
+    <div id="fullScreenMessage" role="dialog" aria-modal="true" aria-labelledby="fullScreenMessageTitle" aria-describedby="fullScreenMessageText" class="withLoadingImage" style="display: none;">
+        <div id="fullScreenMessageMask"></div>
+        <div id="fullScreenMessageIcon"></div>
+        <div id="fullScreenMessageCenter" class="baseColor">
+            <div id="fullScreenMessageTextWrapper">
+                <span id="fullScreenMessageLoadingIcon" class="loadingAnimation-large"></span>
+                <div id="fullScreenMessageTitle" role="heading" aria-level="1" tabindex="0">Loading your lab content</div>
+                <div id="fullScreenMessageText" role="status"></div>
+                <div id="fullScreenProgressWrapper" style="display: none;">
+                    <div id="fullScreenProgressText"></div>
+                    <div id="fullScreenProgressBar" class="primary-color-low-opacity-background">
+                        <div id="fullScreenProgressFill" class="primary-color-background"></div>
+                    </div>
+                </div>
+                <div id="fullScreenMessageButtonWrapper" style="display: none;">
+                    <span id="fullScreenMessageButtons"></span>
+                    <input type="button" id="closeWindow" value="Close Window" style="display:none;">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    
+    <script>
+        function getCookie(cname) {
+            let name = cname + "=";
+            let decodedCookie = decodeURIComponent(document.cookie);
+            let ca = decodedCookie.split(';');
+            for(let i = 0; i <ca.length; i++) {
+                let c = ca[i];
+                while (c.charAt(0) == ' ') {
+                c = c.substring(1);
+                }
+                if (c.indexOf(name) == 0) {
+                return c.substring(name.length, c.length);
+                }
+            }
+            return "";
+        }
+        // Checking to see if the disabledTracking cookie is set to drive pendo initialization for running playwrite tests without Pendo intervention.
+        if(getCookie("disabledTracking") != "true") {
+            (function (apiKey) {
+            (function (p, e, n, d, o) {
+                var v, w, x, y, z; o = p[d] = p[d] || {}; o._q = o._q || [];
+                v = ['initialize', 'identify', 'updateOptions', 'pageLoad', 'track']; for (w = 0, x = v.length; w < x; ++w)(function (m) {
+                    o[m] = o[m] || function () { o._q[m === v[0] ? 'unshift' : 'push']([m].concat([].slice.call(arguments, 0))); };
+                })(v[w]);
+                y = e.createElement(n); y.async = !0; y.src = 'https://content.analytics.learnondemandsystems.com/agent/static/' + apiKey + '/pendo.js';
+                z = e.getElementsByTagName(n)[0]; z.parentNode.insertBefore(y, z);
+            })(window, document, 'script', 'pendo');
+
+            pendo.initialize({
+                visitor: {
+                    id: "lod-3301544",
+                    platform: "lod",
+                    iem: false,
+                    labAuthor: false,
+                    instructionsAuthor: false
+                },
+                account: {
+                id: "4140",
+                orgId: "2795",
+                name: "Professional Services Contracted Projects",
+                platform: "lod"
+            }
+
+            });
+        })("536f12da-8330-4d47-64ff-6133e760c5d2");
+        }
+    </script>
+
+    
+    <script>
+      (function(h,o,u,n,d) {
+        h=h[d]=h[d]||{q:[],onReady:function(c){h.q.push(c)}}
+        d=o.createElement(u);d.async=1;d.src=n
+        n=o.getElementsByTagName(u)[0];n.parentNode.insertBefore(d,n)
+        })(window,document,'script','https://www.datadoghq-browser-agent.com/us3/v6/datadog-logs.js','DD_LOGS')
+      window.DD_LOGS.onReady(function() {
+          window.DD_LOGS.init({
+            clientToken: 'pub95df9c2772f25cae094492ee095d1bca',
+            site: 'us3.datadoghq.com',
+            env: 'prod',
+            service: 'lab-client-frontend',
+            forwardErrorsToLogs: true,
+            telemetrySampleRate: 100,
+            trackSessionAcrossSubdomains: true,
+            forwardConsoleLogs: ['error', 'warn'],
+          })
+        })
+    </script>
+
+    
+<script>
+    let iFrameDetectorModel = {
+        requireIFrame: false
+    };
+
+    function isInIFrame() {
+        return (window === window.parent) ? false : true;
+    }
+
+    $(function () {
+        if (iFrameDetectorModel.requireIFrame && !isInIFrame()) {
+            window.location.href = "/AccessDenied";
+        };
+    });
+
+</script>
+
+    <textarea id="copyInput" value="" style="position: absolute; left:-10000px; top:-10000px; "></textarea>
+
+
+
+<div id="anki-lingo-flash-container" class="anki-lingo-flash-container"><template shadowrootmode="closed"><link rel="stylesheet" href="chrome-extension://mckpakengfehoahceapldiljefonpgfk/style.css"></template></div></body></html>

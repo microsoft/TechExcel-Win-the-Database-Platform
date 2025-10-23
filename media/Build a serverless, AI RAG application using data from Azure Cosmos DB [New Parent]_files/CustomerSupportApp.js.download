@@ -1,0 +1,135 @@
+﻿
+/*
+ *
+ * Skillable Customer Support JavaScript Client v1.0.0
+ * Author: Martin Fowler
+ * Date: 10/13/2022
+ * 
+ * selector: css selector that points to the element where the link will be created
+ * workflowType: string value name of the workflow process. Examples: "DocsAppIframeTms" or "DocsAppIframeLod"
+ * opts: object representing the options used to create the link/button
+ * data: object that contains values that you wish to pass to the workflow process.
+ *
+ */
+function CustomerSupport(selector, workflowType, opts, data) {
+    let csObj = {
+
+        // All Options that we allow customization of will live here
+        options: {
+            linkClass: "customerSupportLink",
+            buttonClass: "customerSupportButton",
+            formClass: "customerSupportDataForm",
+            target: "_blank",
+            dataFormId: "customerSupportLinkDataForm",
+            linkId: "supportlink",
+            baseUrl: "",
+            SubmitText: "Help",
+            selector: selector,
+            workflowType: workflowType,
+            beforeClick: function () { }
+        },
+
+        // All data fields that we support will live here
+        payload: {
+            // Additional fields go here
+        },
+
+        /*
+         * 
+         * selector: CSS selector to find the DOM object
+         * workflowType: specifies which workflow process to link to
+         * payload: optional overrides of default payload, this should be set by the platform
+         * options: optional overrides to default app options. this allows for better customization as needed
+         * 
+         */
+        createLink: async function () {
+
+            let csApp = this;
+
+            // create the link. set on click function to generate the form and then submit it
+            let button = $("<a class=\"cslink formsubmit " + this.options.linkClass + "\" href=\"javascript:void(0);\" id=\"cslink_" + this.options.linkId + "\" target=\"" + this.options.target + "\">" + this.options.SubmitText + "</a>").on('click', async function (e) {
+                e.preventDefault();
+                csApp.options.beforeClick(csApp);
+                let form = await csApp.createForm(csApp.options, csApp.payload);
+                form.submit();
+            });
+
+            $(selector).append(button);
+        },
+
+        createButton: async function () {
+
+            let csApp = this;
+
+            // create the button. set on click function to generate the form and then submit it
+            let button = $("<button class=\"csbutton formsubmit " + this.options.buttonClass + "\" type=\"button\" id=\"csbutton_" + this.options.linkId + "\">" + this.options.SubmitText + "</button>").on('click', async function (e) {
+                e.preventDefault();
+                csApp.options.beforeClick(csApp);
+                let form = await csApp.createForm(csApp.options, csApp.payload);
+                form.submit();
+            });
+
+            $(selector).append(button);
+        },
+
+        /*
+         * 
+         * the createForm function requires options, workflows, and payload objects 
+         * simply for the fact that the "this" object at run time wont be the Customer Support object, 
+         * but instead the link or button object. This function needs to be sent the context.
+         * 
+         */
+        createForm: async function (options, payload) {
+
+            let workflowStartUrl = "/Workflows/LoadPost/" + options.workflowType;
+
+            let form = $("<form method=\"POST\" action=\"" + options.baseUrl + workflowStartUrl + "\" enctype=\"text/plain\" id=\"csform_" + options.dataFormId + "\" style=\"display: inline-block;\" class=\"" + options.formClass + "\" target=\"" + options.target + "\"/>")
+
+            let keys = Object.keys(payload);
+            for (const element of keys) {
+                let item = element;
+                let value = payload[item];
+
+                if (typeof value === 'string' || value instanceof String) {
+                    value = encodeURI(value);
+                    value = await csObj.encrypt(value);
+                    value = encodeURIComponent(value);
+                }
+
+                let hiddenOption = $("<input type=\"hidden\" id=\"" + item + "\" name=\"" + item + "\" value=\"" + value + "\" />");
+                form.append(hiddenOption);
+            }
+            $("body").append(form);
+            return form;
+        },
+
+        encrypt: async function (plaintext) {
+            let value = window.btoa(plaintext);
+            console.log(value);
+            return value;
+        },
+
+        setDefaults: function (options, defaults) {
+            return this.merge(defaults, options);
+        },
+
+        appendData: function (payload) {
+            this.payload = this.merge(this.payload, payload);
+        },
+        appendOptions: function (options) {
+            this.options = this.merge(this.options, options);
+        },
+
+        merge: function (data1, data2) {
+            return {
+                ...data1,
+                ...data2
+            };
+        }
+    };
+
+    csObj.appendOptions(opts);
+    csObj.appendData(data);
+
+    return csObj;
+}

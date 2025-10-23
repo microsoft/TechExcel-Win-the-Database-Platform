@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<!-- saved from url=(0106)https://labclient.labondemand.com/VirtualizationClient/e013c27b-7e28-4b7b-a514-ffe8a76c35a1/?childClient=1 -->
+<html lang="en-US" dir="ltr"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script async="" src="./datadog-logs.js.download"></script><script async="" src="./pendo.js.download"></script><script type="text/javascript" src="./strings-en.js.download"></script>
+    <meta name="viewport" content="width=device-width">
+    <title>40-505-33: Build a serverless, AI RAG application using data from Azure Cosmos DB</title>
+    <link rel="shortcut icon" href="https://labclient.labondemand.com/images/favicon-32x32.png">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <link href="./virtualization-client-v2.css" rel="stylesheet" type="text/css">
+    <script src="./jquery.min(1).js.download"></script>
+
+
+    <link id="themeStylesheet" href="./styles-v2" rel="stylesheet" type="text/css">
+
+
+
+    <script src="./string-functions.js.download"></script>
+    <script src="./LocalizeTo" type="text/javascript"></script>
+ 
+        <script src="./appcfg-lod.js.download"></script>
+        <script src="./resource.js.download"></script>
+        <script src="./hi5core_min.js.download"></script>
+        <script src="./hi5_min.js.download"></script>
+        <script src="./surface_min.js.download"></script>
+        <script src="./rdpcore_min.js.download"></script>
+        <script src="./rdp_min.js.download"></script>
+        <script src="./hyperv-spark.js.download"></script>
+
+        <script src="./lab-client-api.js.download"></script>
+    
+</head>
+
+<body class="virtualization-client ">
+    <div id="contentDialog" style="display: none;">
+        <div id="contentDialogContentWrapper">
+            <div id="contentDialogTitle">
+                <div id="closeContentDialogButton" style="display: none;" class="closeButton unselectable" title="Close"></div>
+                <div id="closeContentDialogMessage" style="display: none;"></div>
+            </div>
+            <div id="contentDialogContent">
+                <iframe id="contentDialogIFrame" style="display: none;" src="./saved_resource(1).html" allowfullscreen=""></iframe>
+                <video id="contentDialogVideo" style="display: none;" controls=""></video>
+            </div>
+        </div>
+        <div id="contentDialogMask"></div>
+    </div>
+
+    <div id="fullScreenMessage" role="dialog" aria-modal="true" aria-labelledby="fullScreenMessageTitle" aria-describedby="fullScreenMessageText" style="display:none;">
+        <div id="fullScreenMessageMask"></div>
+        <div id="fullScreenMessageIcon" style="display: none;"></div>
+        <div id="fullScreenMessageCenter" class="baseColor">
+            <div id="fullScreenMessageTextWrapper">
+                <span id="fullScreenMessageLoadingIcon" class="loadingAnimation-large"></span>
+                <div id="fullScreenMessageTitle" role="heading" aria-level="1"></div>
+                <div id="fullScreenMessageText" role="status"></div>
+                <div id="fullScreenProgressWrapper" style="display: none;">
+                    <div id="fullScreenProgressText"></div>
+                    <div id="fullScreenProgressBar" class="primary-color-low-opacity-background">
+                        <div id="fullScreenProgressFill" class="primary-color-background"></div>
+                    </div>
+                </div>
+                <div id="fullScreenMessageButtonWrapper">
+                    <span id="fullScreenMessageButtons"></span>
+                    <input type="button" id="closeWindow" value="Close Window" style="display:none;">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="labConsole" style="" class="childClient " role="main" aria-label="Lab Workspace">
+
+            <div id="titleBar" role="menubar" class="title-bar">
+                <div id="fullscreen" title="Full Screen" class="virtualization-menu-button" tabindex="0" role="menuitem"></div>
+
+                <div id="displayMenuTitle" title="Power and Display" class="virtualization-menu-button" tabindex="0" role="menuitem" aria-expanded="false" aria-haspopup="true" style=""></div>
+                <ul id="displayMenu" class="virtualization-menu" role="menu">
+                    <li class="menuItem menu-item" id="refreshDisplay" tabindex="0" role="menuitem" style="">Reconnect</li>
+                        <li class="menuItem menu-item" id="turnOnMachine" style="display: none;" tabindex="0" role="menuitem">Power On</li>
+                        <li class="menuItem menu-item" id="pauseMachine" tabindex="0" role="menuitem">Pause</li>
+                        <li class="menuItem menu-item" id="resumeMachine" style="display: none;" tabindex="0" role="menuitem">Resume</li>
+                        <li class="menuItem menu-item" id="resetMachine" tabindex="0" role="menuitem">Reset/Reboot</li>
+                        <li class="menuItem menu-item" id="turnOffMachine" tabindex="0" role="menuitem">Power Off</li>
+                    <div class="virtualization-menu-divider"></div>
+                    <li class="menuItem menu-item" id="fitWindowToMachine" tabindex="0" role="menuitem" style="">Fit Window to Machine</li>
+                    <li class="menuItem menu-item" id="fitMachineToWindow" tabindex="0" role="menuitem" style="">Fit Machine To Window</li>
+                        <li class="menuItem menu-item open-in-new-window-link icon-link" id="openInNewWindow" tabindex="0" role="menuitem">Open in New Window</li>
+                        <li class="menuItem menu-item split-windows-link icon-link" id="splitWindows" tabindex="0" role="menuitem">Split Windows</li>
+                    <li class="menuItem menu-item" id="revertMachine" tabindex="0" role="menuitem" style="display: none;">Revert Machine</li>
+                        <li class="virtualization-menu-divider"></li>
+                        <li class="menuItem menu-item" id="resetInternetGateway" tabindex="0" role="menuitem">Reset Internet Gateway</li>
+                </ul>
+
+                <div id="machineCommands" class="virtualization-menu-button" title="Keyboard" tabindex="0" role="menuitem" aria-expanded="false" aria-haspopup="true" style=""></div>
+                <ul id="machineCommandsMenu" class="virtualization-menu" role="menu">
+                    <li class="menuItem menu-item" id="ctlAltDel" tabindex="0" role="menuitem" aria-label="Type CTRL+ALT+DEL key combination in machine">Ctrl+Alt+Delete</li>
+                        <li class="menuItem menu-item" id="altTab" tabindex="0" role="menuitem" aria-label="Type ALT plus Tab key combination in machine">ALT+Tab</li>
+                        <li id="windowsKeyWrapper" class="menuItem menu-item parent parent-menu primary-icon-color" tabindex="0" role="menuitem" aria-expanded="false" aria-haspopup="true" style="display: none;">
+                            Windows Key
+                            <ul class="children virtualization-menu child-menu" role="menu">
+                                <li class="menuItem menu-item" id="windowsKey" tabindex="0" role="menuitem" aria-label="Type Windows key in machine">Windows Key</li>
+                                <li class="menuItem menu-item" id="windowsKeyD" tabindex="0" role="menuitem" aria-label="Type Windows key plus D key combination in machine">Windows Key + D</li>
+                                <li class="menuItem menu-item" id="windowsKeyE" tabindex="0" role="menuitem" aria-label="Type Windows key plus E key combination  in machine">Windows Key + E</li>
+                                <li class="menuItem menu-item" id="windowsKeyF" tabindex="0" role="menuitem" aria-label="Type Windows key plus F key combination in machine">Windows Key + F</li>
+                                <li class="menuItem menu-item" id="windowsKeyM" tabindex="0" role="menuitem" aria-label="Type Windows key plus M key combination in machine">Windows Key + M</li>
+                                <li class="menuItem menu-item" id="windowsKeyR" tabindex="0" role="menuitem" aria-label="Type Windows key plus R key combination in machine">Windows Key + R</li>
+                                <li class="menuItem menu-item" id="windowsKeyX" tabindex="0" role="menuitem" aria-label="Type Windows key plus X key combination in machine">Windows Key + X</li>
+                                <li class="menuItem menu-item" id="windowsKeyPlus" tabindex="0" role="menuitem" aria-label="Type Windows key plus additional key combination in machine">Windows Key + ...</li>
+                            </ul>
+                        </li>
+                        <li class="menuItem menu-item" id="windowsKeyStandAlone" style="" tabindex="0" role="menuitem" aria-label="Type Windows key in machine">Windows Key</li>
+                        <li id="paste" class="menuItem menu-item parent parent-menu" tabindex="0" role="menuitem" aria-expanded="false" aria-haspopup="true">
+                            Type Text
+                            <ul class="children virtualization-menu child-menu" role="menu">
+                                <li class="menuItem menu-item" id="pasteUsername" tabindex="0" role="menuitem" aria-label="Type username in machine">Type Username</li>
+                                <li class="menuItem menu-item" id="pastePassword" tabindex="0" role="menuitem" aria-label="Type password in machine">Type Password</li>
+                                <li class="menuItem menu-item" id="pasteClipboard" tabindex="0" role="menuitem" aria-label="Type clipboard text in machine">Type Clipboard Text</li>
+                            </ul>
+                        </li>
+                   
+                        <li class="menuItem menu-item" id="showVirtualKeyboard" tabindex="0" role="menuitem">Virtual Keyboard</li>
+                </ul>
+
+                <div id="quickMessage"></div>
+
+                    <span id="machineName" class="machine-selector" tabindex="0" aria-expanded="false" role="menuitem" aria-haspopup="true" title="Machine Selection" style="display: none;">Build Base VM</span>
+                    <div id="machineSelectMenu" class="virtualization-menu">
+                        <div class="menuWrapper"><div class="menuItem menu-item selected" role="menuitem" tabindex="0" id="machineSelect326266">Build Base VM</div></div>
+                    </div>
+
+                    <div id="poorConnectionWarning" style="display: none;">
+                        <span id="poorConnectionWarningIndicator" aria-expanded="false" role="menuitem" aria-haspopup="true">Poor Connection</span>
+                        <div id="poorConnectionTooltip" role="tooltip">
+                            It may just be temporary. If it persists, you might try resetting your router or wifi connection.
+                            <a href="https://docs.skillable.com/lod/connectivity-issues.md" target="_blank">Learn More</a>
+                        </div>
+                    </div>
+
+
+            </div>
+
+        <div id="vmWrapper" class="spark-remote-controller-wrapper" aria-label="Virtual Machines To access lab controls and break out of the vm focus press CTRL + ALT + Break" role="application" style="right: 0px; bottom: 0px; overflow: auto;"><div id="sparkViewWrapper-326266" class="sparkViewWrapper" style="text-align:left; position:relative; overflow:hidden;"><canvas id="vm-canvas-326266" width="1280" height="720" style="outline: none; background-color:#000;"></canvas><div contenteditable="true" autocomplete="new-password" autocorrect="off" autocapitalize="off" spellcheck="false" accesskey="f" id="wsinput" tabindex="1" style="opacity: 0.01; resize: none; position: absolute; margin: 0px; border: none; outline: none; left: 0px; top: 24px; padding: 504px 0px 0px 896px; width: 384px; height: 216px; z-index: 88; cursor: url(&quot;data:image/x-icon;base64,AAACAAEAKScAAAMAAwAKMwAAFgAAACgAAAApAAAATgAAAAEAIAAAAAAA5hkAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAQAAAADAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAJAAAADwAAAA4AAAAKAAAABAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAQAAAAEAAAAAwAAAAEAAAACAAAACgAAABcAAAAhAAAAIQAAABcAAAAKAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAHAAAADQAAABAAAAAMAgAAHwwAANgLAQCmBAAAUAAAADMAAAAxAAAAIgAAAA8AAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAA8AAAAdAAAAIwAAAB0MAQC62NbW//////8MAADWAAAAPgAAADgAAAAmAAAAEQAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAsBAL0NAAD0BAEARwAAACkAAAA0BAEAXQwAAN3/////2NbW/wwAANwAAABAAAAANAAAAB8AAAANAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADAAA5/f09P8NAAD1BAEAXQAAAEAMAQDHycLC//////8MAQDFBgEAegAAAD4AAAAvAAAAHAAAAA0AAAAFAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMAADn//////f09P8NAAD2BAEAbAwAAOD/////4+Hh/wwAAN8AAABFAAAAPgAAADAAAAAhAAAAFgAAAA0AAAAGAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwAAOf///////////f09P8NAAD3vLSz//////8LAQDQBgEAgQAAAEkAAABCAAAAOgAAADEAAAAmAAAAGgAAAAwAAAADAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADAAA5/////////////////f09P///////////wsBANELAQDRCwEA0QsBANALAQDOAAAAPAAAAC8AAAAfAAAADQAAAAMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMAADn////////////////////////////////////////////////4+Hh/wsBAM8AAAA8AAAALAAAABkAAAAKAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwAAOf//////////////////////////////////////////+ro6P8LAQDQBAEAaAAAAC8AAAAdAAAADgAAAAUAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADAAA5//////////////////////////////////////z8PD/CwEA0AQBAGgAAAAvAAAAHQAAAA8AAAAFAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMAADn////////////////////////////////+/n4/wsBANAEAQBoAAAALwAAAB0AAAAPAAAABQAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwAAOf///////////////////////////////8LAQDQBAEAaAAAAC8AAAAdAAAADwAAAAUAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADAAA5///////////////////////////CwEA0AQBAGgAAAAvAAAAHQAAAA8AAAAFAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMAADn/////////////////////wsBAM8EAQBoAAAALwAAAB0AAAAPAAAABQAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwAAOf///////////////8LAQDNBAEAZwAAAC8AAAAdAAAADwAAAAUAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADAAA5///////////CwEAyAQBAGAAAAAuAAAAHQAAAA8AAAAFAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMAADn/////wsBAMIEAQBSAAAAJQAAAB0AAAAPAAAABQAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwAAOcLAQC+BAEAQQAAABYAAAAVAAAADgAAAAUAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADAAA5wQBADkAAAAGAAAACgAAAAgAAAAFAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAACAAAAAgAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=&quot;) 3 3, default; font-weight: normal; overflow: hidden;"></div></div></div>
+        <div id="sshWrapper" class="endpoint-wrapper" style="display: none;"></div>
+        <div id="httpEndpointWrapper" class="endpoint-wrapper" style="display: none;"></div>
+        <div id="rdpEndpointWrapper" class="endpoint-wrapper spark-remote-controller-wrapper" style="display: none;"></div>
+        <div id="telnetEndpointWrapper" class="endpoint-wrapper spark-remote-controller-wrapper" style="display: none;"></div>
+        <div id="vncEndpointWrapper" class="endpoint-wrapper spark-remote-controller-wrapper" style="display: none;"></div>
+        <div id="containerWrapper" style="display: none;"></div>
+        <div id="rdpWrapper" style="display: none;">
+            <div>This machine must be controlled outside of your browser via Remote Desktop.</div>
+            <input type="button" id="launchRdp" value="Launch Remote Desktop">
+            <table>
+                <tbody><tr>
+                    <td>Username:</td>
+                    <td><span id="rdpUsername"></span></td>
+                </tr>
+                <tr>
+                    <td>Password:</td>
+                    <td><span id="rdpPassword"></span></td>
+                </tr>
+            </tbody></table>
+        </div>        
+        <div id="contentResourceWrapper" style="display:none;"></div>
+        <div id="vmOff" style="display: none;">
+            <div>
+                <div class="unselectable">The selected machine is off.</div>
+                <input type="button" id="startMachine" class="primary" value="Start">
+            </div>
+        </div>
+        <div id="vmOpenInSeparateWindow" style="display:none;">
+            Machine is open in a separate window.
+            <a id="closeMachineWindow" href="https://labclient.labondemand.com/VirtualizationClient/e013c27b-7e28-4b7b-a514-ffe8a76c35a1/?childClient=1#">Close Window</a>
+        </div>
+        <div id="notification" class="baseColor" style="display: none;" role="alert">
+            <div id="closeNotification" class="closeButton unselectable" aria-label="Close"></div>
+            <div id="notificationScrollable">
+                <div id="notificationContent"></div>
+            </div>
+        </div>
+    </div>
+
+        <div id="virtualKeyboardWrapper">
+    <div id="virtualKeyboard" class="virtualKeyboard" style="display:none;">
+        <div class="closeButton">X</div>
+        <div class="keyWrapper">
+            <ul class="keyboard-row fKeys" style="margin-bottom:10px;">
+                <li class="key text" data-key="27">Esc</li>
+                <li class="key text" data-key="112" style="margin-left:33px;">F1</li>
+                <li class="key text" data-key="113">F2</li>
+                <li class="key text" data-key="114">F3</li>
+                <li class="key text" data-key="115">F4</li>
+                <li class="key text" data-key="116" style="margin-right:16px;">F5</li>
+                <li class="key text" data-key="117">F6</li>
+                <li class="key text" data-key="118">F7</li>
+                <li class="key text" data-key="119">F8</li>
+                <li class="key text" data-key="120" style="width:31px; margin-left: 18px;">F9</li>
+                <li class="key text" data-key="121" style="width:31px;">F10</li>
+                <li class="key text" data-key="122" style="width:31px;">F11</li>
+                <li class="key text" data-key="123" style="width:31px;">F12</li>
+                <li class="key text" data-key="44" style="width: 40px; margin-left: 14px; visibility:hidden;">PrtSc</li>
+                <li class="key scrolllock" data-key="145" style="width:40px; visibility:hidden;">ScrLk</li>
+                <li class="key text" data-key="19" style="width:40px; visibility:hidden;">Pause</li>
+            </ul>
+            <ul class="keyboard-row">
+                <li class="key shiftable" data-shift="~" data-normal="`" data-key="192">`</li>
+                <li class="key shiftable" data-shift="!" data-normal="1" data-key="49">1</li>
+                <li class="key shiftable" data-shift="@" data-normal="2" data-key="50">2</li>
+                <li class="key shiftable" data-shift="#" data-normal="3" data-key="51">3</li>
+                <li class="key shiftable" data-shift="$" data-normal="4" data-key="52">4</li>
+                <li class="key shiftable" data-shift="%" data-normal="5" data-key="53">5</li>
+                <li class="key shiftable" data-shift="^" data-normal="6" data-key="54">6</li>
+                <li class="key shiftable" data-shift="&amp;" data-normal="7" data-key="55">7</li>
+                <li class="key shiftable" data-shift="*" data-normal="8" data-key="56">8</li>
+                <li class="key shiftable" data-shift="(" data-normal="9" data-key="57">9</li>
+                <li class="key shiftable" data-shift=")" data-normal="0" data-key="48">0</li>
+                <li class="key shiftable" data-shift="_" data-normal="-" data-key="189">-</li>
+                <li class="key shiftable" data-shift="+" data-normal="=" data-key="187">=</li>
+                <li class="key text small" data-key="8" style="width: 71px;"><span style="font-size: 13pt;">←</span> Backspace</li>
+
+                <li class="key text small" data-key="45" style="width: 40px; margin-left: 14px;">Insert</li>
+                <li class="key text small" data-key="36" style="width: 40px;">Home</li>
+                <li class="key text small" data-key="33" style="width:40px; ">P Up</li>
+
+                <li class="key text small numlock down" data-key="144" style="margin-left: 14px; visibility:hidden;">NLock</li>
+                <li class="key" data-key="111">/</li>
+                <li class="key" data-key="106">*</li>
+                <li class="key" data-key="109">-</li>
+
+            </ul>
+            <ul class="keyboard-row">
+                <li class="key text" data-key="9" style="width:48px;">Tab</li>
+                <li class="key shiftable capitalizable" data-shift="Q" data-normal="q" data-key="81">q</li>
+                <li class="key shiftable capitalizable" data-shift="W" data-normal="w" data-key="87">w</li>
+                <li class="key shiftable capitalizable" data-shift="E" data-normal="e" data-key="69">e</li>
+                <li class="key shiftable capitalizable" data-shift="R" data-normal="r" data-key="82">r</li>
+                <li class="key shiftable capitalizable" data-shift="T" data-normal="t" data-key="84">t</li>
+                <li class="key shiftable capitalizable" data-shift="Y" data-normal="y" data-key="89">y</li>
+                <li class="key shiftable capitalizable" data-shift="U" data-normal="u" data-key="85">u</li>
+                <li class="key shiftable capitalizable" data-shift="I" data-normal="i" data-key="73">i</li>
+                <li class="key shiftable capitalizable" data-shift="O" data-normal="o" data-key="79">o</li>
+                <li class="key shiftable capitalizable" data-shift="P" data-normal="p" data-key="80">p</li>
+                <li class="key shiftable capitalizable" data-shift="{" data-normal="[" data-key="219">[</li>
+                <li class="key shiftable" data-shift="}" data-normal="]" data-key="221">]</li>
+                <li class="key shiftable" data-shift="|" data-normal="\" data-key="220" style="width:52px;">\</li>
+                <li class="key text small" data-key="46" style="width: 40px; margin-left: 14px;">Delete</li>
+                <li class="key text small" data-key="35" style="width: 40px;">End</li>
+                <li class="key text small" data-key="34" style="width:40px; ">P Down</li>
+
+                <li class="key numpad" data-numlock="7" data-normal="H" data-key="55" style="margin-left: 14px;">7</li>
+                <li class="key numpad" data-numlock="8" data-normal="↑" data-key="56">8</li>
+                <li class="key numpad" data-numlock="9" data-normal="PU" data-key="57">9</li>
+                <li class="key" data-key="107" style="height:43px; position: absolute; right:0; top:0;">+</li>
+            </ul>
+            <ul class="keyboard-row">
+                <li class="key text capslock" data-key="20" style="width:57px;">Caps</li>
+                <li class="key shiftable capitalizable" data-shift="A" data-normal="a" data-key="65">a</li>
+                <li class="key shiftable capitalizable" data-shift="S" data-normal="s" data-key="83">s</li>
+                <li class="key shiftable capitalizable" data-shift="D" data-normal="d" data-key="68">d</li>
+                <li class="key shiftable capitalizable" data-shift="F" data-normal="f" data-key="70">f</li>
+                <li class="key shiftable capitalizable" data-shift="G" data-normal="g" data-key="71">g</li>
+                <li class="key shiftable capitalizable" data-shift="H" data-normal="h" data-key="72">h</li>
+                <li class="key shiftable capitalizable" data-shift="J" data-normal="j" data-key="74">j</li>
+                <li class="key shiftable capitalizable" data-shift="K" data-normal="k" data-key="75">k</li>
+                <li class="key shiftable capitalizable" data-shift="L" data-normal="l" data-key="76">l</li>
+                <li class="key shiftable" data-shift=":" data-normal=";" data-key="186">;</li>
+                <li class="key shiftable" data-shift="&quot;" data-normal="&#39;" data-key="222">'</li>
+                <li class="key text" data-key="13" style="width:76px;"><span style="font-size: 14pt;">↵</span> Enter</li>
+
+                <li class="key numpad" data-numlock="4" data-normal="←" data-key="52" style="margin-left: 158px;">4</li>
+                <li class="key numpad" data-numlock="5" data-normal="" data-key="53">5</li>
+                <li class="key numpad" data-numlock="6" data-normal="→" data-key="54">6</li>
+            </ul>
+            <ul class="keyboard-row">
+                <li class="key text shift" data-key="16" style="width:73px;">Shift</li>
+                <li class="key shiftable capitalizable" data-shift="Z" data-normal="z" data-key="90">z</li>
+                <li class="key shiftable capitalizable" data-shift="X" data-normal="x" data-key="88">x</li>
+                <li class="key shiftable capitalizable" data-shift="C" data-normal="c" data-key="67">c</li>
+                <li class="key shiftable capitalizable" data-shift="V" data-normal="v" data-key="86">v</li>
+                <li class="key shiftable capitalizable" data-shift="B" data-normal="b" data-key="66">b</li>
+                <li class="key shiftable capitalizable" data-shift="N" data-normal="n" data-key="78">n</li>
+                <li class="key shiftable capitalizable" data-shift="M" data-normal="m" data-key="77">m</li>
+                <li class="key shiftable" data-shift="&lt;" data-normal="," data-key="188">,</li>
+                <li class="key shiftable" data-shift="&gt;" data-normal="." data-key="190">.</li>
+                <li class="key shiftable" data-shift="?" data-normal="/" data-key="191">/</li>
+                <li class="key text shift" data-key="16" style="width:93px;">Shift</li>
+                <li class="key text small" data-key="38" style="width: 40px; margin-left: 57px; font-size:14pt;">↑</li>
+
+                <li class="key numpad" data-numlock="1" data-normal="E" data-key="49" style="margin-left: 57px;">1</li>
+                <li class="key numpad" data-numlock="2" data-normal="↓" data-key="50">2</li>
+                <li class="key numpad" data-numlock="3" data-normal="PD" data-key="51">3</li>
+                <li class="key text small" data-key="13" style="height: 43px; position: absolute; right: 0; top: 0;">Enter</li>
+            </ul>
+            <ul class="keyboard-row">
+                <li class="key text modifier" data-key="17" style="width:42px;">Ctrl</li>
+                <li class="key text modifier windows" data-key="91" style="width:42px;">Win</li>
+                <li class="key text modifier" data-key="18" style="width:42px;">Alt</li>
+                <li class="key" data-key="32" style="width:222px;"></li>
+                <li class="key text modifier" data-key="18" style="width:42px;">Alt</li>
+                <li class="key text modifier windows" data-key="92" style="width:42px;">Win</li>
+                <li class="key text modifier" data-key="17" style="width:42px;">Ctrl</li>
+                <li class="key text small" data-key="37" style="width: 40px; margin-left: 14px; font-size: 14pt;">←</li>
+                <li class="key text small" data-key="40" style="width: 40px; font-size: 14pt;">↓</li>
+                <li class="key text small" data-key="39" style="width: 40px; font-size: 14pt;">→</li>
+
+                <li class="key numpad" data-numlock="0" data-normal="Ins" data-key="48" style="margin-left: 13px; width: 62px;">0</li>
+                <li class="key numpad" data-numlock="." data-normal="Del" data-key="110">.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<script src="./jquery.virtual-keyboard.js.download"></script>
+<link href="./jquery.virtual-keyboard.css" rel="stylesheet">
+
+    <div id="templates" style="display:none;">
+        <div class="machine hoverColor selectedColor activeColor accent-background">
+            <div class="machineNameCenter">
+                <div class="machineName"></div>
+            </div>
+            <div class="inputRelease">
+                To release mouse, press <strong>Ctrl+Alt+Left Arrow</strong>
+            </div>
+            <div class="machineInfo">
+                <table class="credentials fields">
+                    <tbody><tr>
+                        <td class="fieldName">Username</td>
+                        <td><span class="typeText username" title="Type Text" role="button" tabindex="0"></span></td>
+                    </tr>
+                    <tr>
+                        <td class="fieldName">Password</td>
+                        <td><span class="typeText password" title="Type Text" role="button" tabindex="0"></span></td>
+                    </tr>
+                </tbody></table>
+                <div class="floppyDrive">
+                </div>
+                <div class="dvdDrive">
+                    <div class="dvdDriveInner" style="display:none;">
+                        <div class="selectHeading">DVD Drive</div>
+                        <select>
+                            <option value="-2">No Media</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="networkAdapters"></div>
+                <input type="button" class="ctrlAltDel ctrl-alt-del-button" value="Ctrl+Alt+Delete">
+                    <a class="openInNewWindow open-in-new-window-link icon-link" href="https://labclient.labondemand.com/VirtualizationClient/e013c27b-7e28-4b7b-a514-ffe8a76c35a1/?childClient=1#">Open in New Window</a>
+            </div>
+        </div>
+
+        <div class="contentResource hoverColor selectedColor activeColor">
+            <div class="machineNameCenter">
+                <div class="machineName"></div>
+            </div>
+        </div>
+
+        <div class="networkAdapter">
+            <div class="selectHeading name"></div>
+            <select>
+                <option value="-1">Not Connected</option>
+            </select>
+        </div>
+
+        <div class="endpoint accent-background">
+            <div class="name"></div>
+            <div class="expanded-info" style="display:none;">
+                <div class="description"></div>
+                <div class="credentials" style="display:none;">
+                    <table class="fields">
+                        <tbody><tr><td class="fieldName">Username</td><td><span class="username copyable"></span></td></tr>
+                        <tr><td class="fieldName">Password</td><td><span class="password copyable"></span></td></tr>
+                    </tbody></table>
+                </div>
+                <div>
+                    <input type="button" class="reconnect" value="Reconnect">
+                </div>
+            </div>            
+        </div>
+
+
+    </div>
+
+    <script>
+        var model = {
+            labInstanceId: 55844333,
+            labProfileId: 182711,
+            key: "e013c27b-7e28-4b7b-a514-ffe8a76c35a1",
+            platformId: 2,
+            contentOnly: false,
+            isChildClient: true,
+            isMonitor: false,
+            isTakeControl: false,
+            showWhenStarting: false,
+            allowShowWhenStarting: true,
+            maxLabSaveDurationDays: 2,
+            maxSavedLabs: 2,
+            maxSnapshots: 0,
+            allowTimeExtensions: true,
+            promptForExtensionMinutes: 10,
+            extensionMinutes: 15,
+            impersonatorName: "",
+            monitorName: "",
+            showNavigationBar: false,
+            showTitleBar: true,
+            themeId: 20,
+            limitedScreenSizes: true,
+            hasStartState: false,
+            useStaticThumbnails: false,
+            evaluationId: null,
+            evaluationServiceUrl: "",
+            isExam: true,
+            postLabUrl: "",
+            freshFromPreinstance : false,
+            useCookies : true,
+            language: "en-US",
+            showConnectionQuality: true,
+            latencyEndpoint: "https://eu-latency.labondemand.com/ping",
+            useGetForLatencyEndpoint: false,
+            remoteControllerChanged: false,
+            completionStatus: 3,
+            showPasteLinks: true,
+            enableNavigationWarning: true,
+            enableRdpSessionShadowing: true,
+            sessionShadowUserName: "EC",
+            recordRdpSession: false,
+            orgId: "4164",
+            forcedMachineId: null,            
+            autoFocus: true,
+            layoutVersion: 2,
+            useIntegratedBrowser: false,
+            useTabbedInterface: false,
+            showInstructionsWhileBuilding: false
+         };
+    </script>
+
+    
+    <script>
+        function getCookie(cname) {
+            let name = cname + "=";
+            let decodedCookie = decodeURIComponent(document.cookie);
+            let ca = decodedCookie.split(';');
+            for(let i = 0; i <ca.length; i++) {
+                let c = ca[i];
+                while (c.charAt(0) == ' ') {
+                c = c.substring(1);
+                }
+                if (c.indexOf(name) == 0) {
+                return c.substring(name.length, c.length);
+                }
+            }
+            return "";
+        }
+        // Checking to see if the disabledTracking cookie is set to drive pendo initialization for running playwrite tests without Pendo intervention.
+        if(getCookie("disabledTracking") != "true") {
+            (function (apiKey) {
+            (function (p, e, n, d, o) {
+                var v, w, x, y, z; o = p[d] = p[d] || {}; o._q = o._q || [];
+                v = ['initialize', 'identify', 'updateOptions', 'pageLoad', 'track']; for (w = 0, x = v.length; w < x; ++w)(function (m) {
+                    o[m] = o[m] || function () { o._q[m === v[0] ? 'unshift' : 'push']([m].concat([].slice.call(arguments, 0))); };
+                })(v[w]);
+                y = e.createElement(n); y.async = !0; y.src = 'https://content.analytics.learnondemandsystems.com/agent/static/' + apiKey + '/pendo.js';
+                z = e.getElementsByTagName(n)[0]; z.parentNode.insertBefore(y, z);
+            })(window, document, 'script', 'pendo');
+
+            pendo.initialize({
+                visitor: {
+                    id: "lod-3301544",
+                    platform: "lod",
+                    iem: false,
+                    labAuthor: false,
+                    instructionsAuthor: false
+                },
+                account: {
+                id: "4140",
+                orgId: "2795",
+                name: "Professional Services Contracted Projects",
+                platform: "lod"
+            }
+
+            });
+        })("536f12da-8330-4d47-64ff-6133e760c5d2");
+        }
+    </script>
+
+    
+    <script>
+      (function(h,o,u,n,d) {
+        h=h[d]=h[d]||{q:[],onReady:function(c){h.q.push(c)}}
+        d=o.createElement(u);d.async=1;d.src=n
+        n=o.getElementsByTagName(u)[0];n.parentNode.insertBefore(d,n)
+        })(window,document,'script','https://www.datadoghq-browser-agent.com/us3/v6/datadog-logs.js','DD_LOGS')
+      window.DD_LOGS.onReady(function() {
+          window.DD_LOGS.init({
+            clientToken: 'pub95df9c2772f25cae094492ee095d1bca',
+            site: 'us3.datadoghq.com',
+            env: 'prod',
+            service: 'lab-client-frontend',
+            forwardErrorsToLogs: true,
+            telemetrySampleRate: 100,
+            trackSessionAcrossSubdomains: true,
+            forwardConsoleLogs: ['error', 'warn'],
+          })
+        })
+    </script>
+
+    
+<script>
+    let iFrameDetectorModel = {
+        requireIFrame: false
+    };
+
+    function isInIFrame() {
+        return (window === window.parent) ? false : true;
+    }
+
+    $(function () {
+        if (iFrameDetectorModel.requireIFrame && !isInIFrame()) {
+            window.location.href = "/AccessDenied";
+        };
+    });
+
+</script>
+
+
+
+<div id="modalDialog" style="display:none;"><div id="modalContent"></div></div><div id="hi5_notifer_all" style="display: none;"></div></body></html>

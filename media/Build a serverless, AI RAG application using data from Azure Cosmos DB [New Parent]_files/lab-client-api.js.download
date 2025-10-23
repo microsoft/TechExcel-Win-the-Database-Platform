@@ -1,0 +1,420 @@
+﻿class Emitter {
+    constructor() {
+        this.eventMap = new Map();
+    }
+
+    on(event, callback) {
+        if (!this.eventMap.has(event)) {
+            this.eventMap.set(event, []);
+        }
+        this.eventMap.get(event).push(callback);
+    }
+
+    off(event, callback) {
+        if (this.eventMap.has(event)) {
+            const callbacks = this.eventMap.get(event).filter(cb => cb !== callback);
+            this.eventMap.set(event, callbacks);
+        }
+    }
+
+    emit(event, ...data) {
+        if (this.eventMap.has(event)) {
+            this.eventMap.get(event).forEach(callback => {
+                callback(...data);
+            });
+        }
+    }
+}
+
+/** ApiV1 class provides methods to interact with the lab environment. 
+    You can access it using the syntax api.v1.[methodName] 
+*/
+class ApiV1 {
+
+    constructor() {
+        this.emitter = new Emitter();
+    }
+
+    getLabConsole() {
+        if (typeof labConsole !== 'undefined') {
+            return labConsole;
+        }
+        if (typeof labClient !== 'undefined' && labClient.isChildClient()) {
+            return window.parent.consoleWindow.labConsole;
+        }
+    }
+
+    getInstructionsLabClient() {
+        if (typeof labClient !== 'undefined') {
+            return labClient;
+        }
+        if (typeof labConsole !== 'undefined' && labConsole.isChildClient()) {
+            return window.parent.instructionsLabClient;
+        }
+    }
+
+    /** Returns the current environment connection status, 
+      * For example, the current connection status of the selected virtual machine in a virtualization lab. 
+      * This is typically used to determine if the lab environment is connected or disconnected.
+      * Example: api.v1.getEnvironmentConnectionStatus();
+      * @returns {Object} An object containing the environment type, status, and other details.
+    */
+    getEnvironmentConnectionStatus() {
+        const response = {
+            environment_type: "none",
+            environment_type_code: 0,
+            machine_id: null,            
+            status: "disconnected",
+            status_code: 0,
+            error: null
+        };
+        const labConsole = this.getLabConsole();
+        if (labConsole != null) {
+            const selectedMachine = labConsole.getSelectedMachine();
+            if (selectedMachine != null) {
+                response.environment_type = "machine";
+                response.environment_type_code = 1;
+                response.machine_id = selectedMachine.ProfileId;
+                const rc = this.getLabConsole()?.getSelectedRemoteController();
+                if (rc != null) {
+                    const connectionState = rc.getConnectionState();
+                    if (connectionState == 1) {
+                        response.status = "connected";
+                        response.status_code = 1;
+                    }
+                }
+            }
+        }
+        return response;
+    }
+
+    /** Returns the latency of the current environment connection.
+      * For example, the current latency between the lab client and the selected virtual machine in a virtualization lab.
+      * This is typically used to measure the responsiveness of the connection.
+      * Example: api.v1.getEnvironmentLatency();
+      * @returns {number} The latency in milliseconds, or 0 if not available.
+    */
+    getEnvironmentLatency() {
+        return this.getLabConsole()?.getLastLatency() ?? 0;      
+    }
+
+    /** Sends text to the current environment.
+      * This is typically used to send commands to a virtual machine console in a virtualization lab.  
+      * Example: api.v1.sendTextToEnvironment("text to be sent");
+      * @param {string} text - The text to send to the environment.
+      * @returns {void} No return value.
+    */
+    sendTextToEnvironment(text) {
+        const labConsole = this.getLabConsole();
+        if (labConsole != null) {
+            labConsole.typeText(text);
+        }
+    }
+
+    /** Returns the value of a lab token by its name.
+      * Lab tokens are used to replace placeholders in instructions with actual values.
+      * You do not need to use the @lab prefix like you do within lab instructions and scripts.
+      * Example: api.v1.getLabToken("LabProfile.Name");
+      * @param {string} name - The name of the lab token to retrieve.
+      * @returns {string|null} The value of the lab token, or null if it does not exist.
+    */
+    getLabToken(name) {
+        const instructionsLabClient = this.getInstructionsLabClient();
+        if (instructionsLabClient != null) {
+            const tokenName = `@lab.${name}`;
+            const tokens = instructionsLabClient.getReplacementTokens();
+            for (const token of tokens) {
+                if (token.Token === tokenName) {
+                    return token.Replacement;
+                }
+            }
+        }
+        return null;
+    }
+
+    /** Returns the value of a lab variable by its name.
+      * Lab variables are used to store values that can be shared across different parts of the lab environment.   
+      * Example: api.v1.getLabVariable("myVariable");
+      * @param {string} name - The name of the lab variable to retrieve.
+      * @returns {string|null} The value of the lab variable, or null if it does not exist.
+    */
+    getLabVariable(name) {
+        const instructionsLabClient = this.getInstructionsLabClient();   
+        if (instructionsLabClient == null) {
+            return null;
+        }
+        return instructionsLabClient.getVariable(name) ?? null;     
+    }
+
+    /** Sets a lab variable with the specified name and value.
+      * Lab variables are used to store values that can be shared across different parts of the lab environment.
+      * Example: api.v1.setLabVariable("myVariable", "myValue");
+      * @param {string} name - The name of the lab variable to set.
+      * @param {string} value - The value to set for the lab variable.
+      * @returns {void} No return value.
+    */
+    setLabVariable(name, value) {
+        const instructionsLabClient = this.getInstructionsLabClient();
+        if (instructionsLabClient == null) {
+            return;
+        }
+        instructionsLabClient.setAndSaveVariable(name, value);     
+    }
+
+    /** Sends a notification to the lab client.
+      * This is typically used to display messages to the user in the lab environment. The notification will be displayed as a toast within the lab client UI.
+      * Example: api.v1.sendLabNotification("This is a notification message.");
+      * @param {string} text - The text of the notification to send.
+      * @returns {void} No return value.
+    */ 
+    sendLabNotification(text) {
+        const instructionsLabClient = this.getInstructionsLabClient();
+        if (instructionsLabClient) {
+            instructionsLabClient.showNotification({ content: text });
+        } else if (typeof labConsole !== 'undefined') {
+            labConsole.showNotification(text);
+        }        
+    }
+
+    /** Returns the index of the current instructions page.
+      * This is typically used to determine which page of instructions the user is currently viewing in a lab environment.
+      * Example: api.v1.getInstructionsPageIndex();
+      * @param {string} text - The text of the instructions page to check.
+      * @returns {number|null} The index of the current instructions page, or null if not available.
+    */
+    getInstructionsPageIndex(text) {
+        const instructionsLabClient = this.getInstructionsLabClient();
+        if (instructionsLabClient == null) {
+            return null;
+        }
+        return instructionsLabClient.getInstructionsPageIndex();
+    }
+
+    /** Returns the number of minutes remaining in the lab.
+      * This is typically used to display a countdown timer for the lab duration.
+      * Example: api.v1.getMinutesRemaining();
+      * @returns {number} The number of minutes remaining in the lab, or 0 if not available.
+    */
+    getMinutesRemaining() {
+        const instructionsLabClient = this.getInstructionsLabClient();
+        if (instructionsLabClient != null) {
+            return instructionsLabClient?.getMinutesRemaining();
+        }
+        return this.getLabConsole()?.getMinutesRemaining() ?? 0;
+    }
+
+    /** Navigates to a specific instructions page by its index.
+      * This is typically used to programmatically change the current page of instructions in a lab environment.
+      * Example: api.v1.gotoInstructionsPage(2);
+      * @param {number} index - The index of the instructions page to navigate to.
+    */
+    gotoInstructionsPage(index) {
+        const instructionsLabClient = this.getInstructionsLabClient();
+        if (instructionsLabClient == null) {
+            return;
+        }
+        instructionsLabClient.gotoInstructionsPage(index);
+    }
+
+    /** Evaluates an activity by its alias.
+      * This is typically used to check if a specific activity in the lab has been completed or passed.
+      * Example: api.v1.evaluateActivity("alias");
+      * @param {string} alias - The alias of the activity to evaluate.
+      * @param {number} [index=0] - The index of the activity to evaluate (default is 0).
+      * @returns {void} No return value.
+    */
+    evaluateActivity(alias, index = 0) {
+        const instructionsLabClient = this.getInstructionsLabClient();
+        if (instructionsLabClient == null) {
+            return;
+        }
+        instructionsLabClient.evaluateActivity(alias, index);
+    }
+
+    /** A function to register a callback for when the environment connection status changes.
+      * This is typically used to listen for changes in the connection status of the lab environment, such as when a virtual machine connects or disconnects.
+      * Example: api.v1.onEnvironmentConnectionStatusChange((status) => { console.log(status); });
+      * @param {Function} callback - The function to call when the connection status changes.
+      * @returns {void} No return value.
+    */
+    onEnvironmentConnectionStatusChange(callback) {        
+        if (typeof labClient !== 'undefined' && labClient.isChildClient()) { //registering in instructions... hook up in virtualization client window
+            window.parent.consoleWindow.api?.v1.emitter.on('environmentConnectionStatusChange', callback);
+        } else {
+            this.emitter.on('environmentConnectionStatusChange', callback);
+        }
+    }
+
+    /** A function to register a callback for when a lab variable changes.
+      * This is typically used to listen for changes in lab variables, which can be used to store and share values across different parts of the lab environment.
+      * Example: api.v1.onLabVariableChanged((name, value) => { console.log(name, value); });
+      * @param {Function} callback - The function to call when a lab variable changes.
+      * @returns {void} No return value.
+    */ 
+    onLabVariableChanged(callback) {        
+        if (typeof labConsole !== 'undefined' && labConsole.isChildClient()) { //registering in virtualization client... hook up in instructions window
+            window.parent.getInstructionsWindow().api.v1.emitter.on('labVariableChanged', callback);
+        } else {
+            this.emitter.on('labVariableChanged', callback);
+        }
+    }
+
+    /** A function to register a callback for when the instructions page changes.
+      * This is typically used to listen for changes in the current page of instructions in a lab environment.
+      * Example: api.v1.onInstructionsPageChanged((pageIndex) => { console.log(pageIndex); });
+      * @param {Function} callback - The function to call when the instructions page changes.
+      * @returns {void} No return value.
+    */
+    onInstructionsPageChanged(callback) {
+        if (typeof labConsole !== 'undefined' && labConsole.isChildClient()) { //registering in virtualization client... hook up in instructions window
+            window.parent.getInstructionsWindow().api.v1.emitter.on('instructionsPageChanged', callback);
+        } else {
+            this.emitter.on('instructionsPageChanged', callback);
+        }
+    }
+
+    /** A function to register a callback for when an activity is completed.
+      * This is typically used to listen for the completion of activities in a lab environment, such as when a user finishes a task or exercise.
+      * Example: api.v1.onActivityCompleted((activityInfo) => { console.log(activityInfo); });
+      * @param {Function} callback - The function to call when an activity is completed.
+      * @returns {void} No return value.
+    */
+    onActivityCompleted(callback) {
+        if (typeof labConsole !== 'undefined' && labConsole.isChildClient()) { //registering in virtualization client... hook up in instructions window
+            window.parent.getInstructionsWindow().api.v1.emitter.on('activityCompleted', callback);
+        } else {
+            this.emitter.on('activityCompleted', callback);
+        }
+    }
+}
+
+var api = {
+    v1: new ApiV1(),
+
+    _runningInFullLabClient: null,
+
+    runningInFullLabClient: () => {
+        if (api._runningInFullLabClient != null) return api._runningInFullLabClient;
+        try {
+            //if we get a successful determination, we'll cache it for future use, as it will not change.
+            api._runningInFullLabClient = window.parent?.isClientWrapper && window.parent.isClientWrapper();
+            return api._runningInFullLabClient;
+        } catch (ex) {
+            return false;
+        }
+    },
+
+    postMessageFromHostWindow: (data) => {
+        let hostWindow = api.runningInFullLabClient() ? window.parent.parent : window.parent;
+        if (hostWindow == null) return;
+        hostWindow.postMessage(data, "*"); 
+    },
+
+    machineConnected: (machineId) => {
+        let data = {
+            event_name: "environment_connection_status_change",
+            environment_type: "machine",
+            environment_type_code: 1,
+            machine_id: machineId,
+            status: "connected",
+            status_code: 1
+        };
+        api.v1.emitter.emit("environmentConnectionStatusChange", data);
+        api.postMessageFromHostWindow(data); 
+    },
+    machineDisconnected: (machineId) => {
+        let data = {
+            event_name: "environment_connection_status_change",
+            environment_type: "machine",
+            environment_type_code: 1,
+            machine_id: machineId,
+            status: "disconnected",
+            status_code: 0
+        };
+        api.v1.emitter.emit("environmentConnectionStatusChange", data);
+        api.postMessageFromHostWindow(data); 
+    },
+    labVariableChanged: (name, value) => {
+        api.v1.emitter.emit("labVariableChanged", name, value);
+        api.postMessageFromHostWindow({ event_name: "lab_variable_changed", name: name, value: value }); 
+    },
+    instructionsPageChanged: (pageIndex) => {
+        api.v1.emitter.emit("instructionsPageChanged", pageIndex);
+        api.postMessageFromHostWindow({ event_name: "instructions_page_changed", page_index: pageIndex });
+    },
+    activityCompleted: (activityInfo) => {
+        api.v1.emitter.emit("activityCompleted", activityInfo);
+        api.postMessageFromHostWindow({ event_name: "activity_completed", id: activityInfo.id, alias: activityInfo.alias, activity_type: activityInfo.activityType, passed: activityInfo.passed });
+    }
+}
+
+window.onload = function () {
+
+    function receiveMessageFromHostPage (event) {
+        if (!event?.data?.event_id) return;
+        let event_id = event.data.event_id;
+        let version = event.data.version ?? 1;
+        if (version != 1) return; //we'll implement other versions as they become available.
+        switch (event_id) {
+            case "getEnvironmentConnectionStatus":
+                if (typeof labConsole !== 'undefined') {
+                    let conn_status = api.v1.getEnvironmentConnectionStatus();
+                    conn_status["event_name"] = "environment_connection_status";
+                    api.postMessageFromHostWindow(conn_status);                    
+                }
+                break;
+            case "getEnvironmentLatency":
+                if (typeof labConsole !== 'undefined') {
+                    api.postMessageFromHostWindow({ event_Id: "environment_latency", latency: api.v1.getEnvironmentLatency() });
+                }
+                break;
+            case "sendTextToEnvironment":                
+                if (typeof labConsole !== 'undefined' && event.data?.text != null) {
+                    api.v1.sendTextToEnvironment(event.data.text);
+                }
+                break;
+            case "getLabToken":
+                if (typeof labClient !== 'undefined' && event.data?.name != null) {
+                    api.postMessageFromHostWindow({ event_Id: "lab_token", value: api.v1.getLabToken(event.data.name) });
+                }
+                break;
+            case "getLabVariable":
+                if (typeof labClient !== 'undefined' && event.data?.name != null) {
+                    api.postMessageFromHostWindow({ event_Id: "lab_variable", value: api.v1.getLabVariable(event.data.name) });
+                }
+                break;
+            case "sendLabNotification":
+                if (typeof labClient !== 'undefined' && event.data?.notification != null) {
+                    api.v1.sendLabNotification(event.data.notification)
+                }
+                break;
+            case "getInstructionsPageIndex":
+                if (typeof labClient !== 'undefined') {
+                    api.postMessageFromHostWindow({ event_Id: "instructions_page_index", page_index: api.v1.getInstructionsPageIndex() });
+
+                }
+                break;
+            case "getMinutesRemaining":
+                if (typeof labClient !== 'undefined') {
+                    api.postMessageFromHostWindow({ event_Id: "minutes_remaining", minutes_remaining: api.v1.getMinutesRemaining() });
+                }
+                break;
+            case "gotoInstructionsPage":
+                if (typeof labClient !== 'undefined' && event.data.page_index != null) {
+                    api.v1.gotoInstructionsPage(event.data.page_index);
+                }
+                break;
+            case "evaluateActivity":
+                if (typeof labClient !== 'undefined' && event.data.alias != null) {
+                    api.v1.evaluateActivity(event.data.alias);
+                }
+                break;
+        }
+    }
+
+    if (api.runningInFullLabClient()) {
+        window.parent.addEventListener("message", receiveMessageFromHostPage, false);
+    } else {
+        window.addEventListener("message", receiveMessageFromHostPage, false);
+    }
+}
