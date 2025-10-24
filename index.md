@@ -22,7 +22,7 @@ By the end of this lab, you'll have hands-on experience with cloud-based databas
 ![Diagram depicts the architecture for integrating GraphRag on Azure Database for PostgreSQL](media/PostgreSQL-AI-architecture.png)
 
 ### Implement generative AI with Azure SQL and REST endpoints
-![Diagram depicts the architecture for creating and storing embeddings in the Azure SQL Database](../../media/session-recommender-architecture.png)
+![Diagram depicts the architecture for creating and storing embeddings in the Azure SQL Database](media/session-recommender-architecture.png)
 
 ### Migrate an on-premises PostgreSQL server to Azure Database for PostgreSQL
 ![Diagram depicts the architecture for migrating an on-premises PostgreSQL server to Azure Database for PostgreSQL flexible server through a virtual gateway and Azure Virtual network (Vnet 1)](media/PostgreSQL-migration-architecture.png)
