@@ -1,9 +1,9 @@
-title: TechExcel Win the Database platform
+title: TechWorkshop L300 Win the database acceleration
 description: In this course, participants will learn to.
 theme: just-the-docs
 
 aux_links:
-  "Win the Database platform":
+  "Win the Database acceleration":
     - "https://github.com/microsoft/TechExcel-Win-the-Database-Platform"
 
 callouts_level: quiet # or loud

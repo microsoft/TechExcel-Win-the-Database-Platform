@@ -4,7 +4,7 @@ layout: home
 nav_order: 1
 ---
 
-# TechExcel: Win the Database Platform
+# TechWorkshop L300: Win the database acceleration
 
 This lab is designed to help you develop advanced skills in database management and AI integration. You'll work with several key products, including Microsoft Azure Cosmos DB, Azure Database for PostgreSQL, and AI integration tools. The exercises in this lab are independent of eachother and each of them is based on an individual case study.
 
@@ -14,20 +14,19 @@ By the end of this lab, you'll have hands-on experience with cloud-based databas
 
 ## Architecture
 
-### Azure SQL Managed Instance
-![Diagram depicts the architecture of an Azure Cloud with a Manged Instance link to an on premise SQL Server](media/SQL_MI_Azure_architecture.jpg)
 
 ### Build a serverless, AI RAG application using data from Azure Cosmos DB
 ![Diagram depicts the architecture of a Copilot with Azure OpenAI Service, Azure CosmosDB for NoSQL and Azure App Service with Semantic Kernel](media/AzureCosmosDB-architecture.png)
-
-### Migrate an on-premises PostgreSQL server to Azure Database for PostgreSQL
-![Diagram depicts the architecture for migrating an on-premises PostgreSQL server to Azure Database for PostgreSQL flexible server through a virtual gateway and Azure Virtual network (Vnet 1)](media/PostgreSQL-migration-architecture.png)
 
 ### Integrate AI functionality into PostgreSQL
 ![Diagram depicts the architecture for integrating GraphRag on Azure Database for PostgreSQL](media/PostgreSQL-AI-architecture.png)
 
 ### Implement generative AI with Azure SQL and REST endpoints
 ![Diagram depicts the architecture for creating and storing embeddings in the Azure SQL Database](../../media/session-recommender-architecture.png)
+
+### Migrate an on-premises PostgreSQL server to Azure Database for PostgreSQL
+![Diagram depicts the architecture for migrating an on-premises PostgreSQL server to Azure Database for PostgreSQL flexible server through a virtual gateway and Azure Virtual network (Vnet 1)](media/PostgreSQL-migration-architecture.png)
+
 
 ## Exercises
 
@@ -50,17 +49,26 @@ For running this lab you'll need:
 - Internet access and network security setup
 - Azure Resource Requirements
 
-For **Exercise 01: Set up and manage an SQL Managed Instance in Azure**:
-- Azure Resource Group and VNet
-- SQL Server or VM Licensing
-- SQL Server Management Studio (SSM)
 
-For **Exercise 02: Build a serverless, AI RAG application using data from Azure Cosmos DB**:
+For **Exercise 01: Build a serverless, AI RAG application using data from Azure Cosmos DB**:
 - Azure Cosmos DB (NoSQL) with vector search
 - Azure OpenAI for GPT-based chat
 - .NET Aspire and AI orchestration
 
-For **Exercise 03: Migrate an on-premises PostgreSQL server to Azure Database for PostgreSQL**:
+For **Exercise 02: Integrate AI functionality into PostgreSQL**:
+- Azure PostgreSQL Flexible Server
+- pgvector, azure_ai, and pg_diskann extensions
+- Azure OpenAI integration for AI queries
+
+For **Exercise 03: Implement generative AI with Azure SQL and REST endpoints**:
+- Azure Subscription (Owner or Contributor permissions)
+- Azure SQL Database (Supports External REST Endpoint Invocation preview feature)
+- Azure OpenAI Resource (GPT-4, text-embedding-ada-002, DALL-E 3 models)
+- Azure AI Content Safety service
+- Visual Studio Code (with SQL extension)
+
+
+For **Exercise 04: Migrate an on-premises PostgreSQL server to Azure Database for PostgreSQL**:
 - Azure PostgreSQL Flexible Server (v16)
 - Azure Virtual Network and VPN Gateway
 - Private DNS zone and SSL certificates for migration
@@ -69,15 +77,3 @@ For **Exercise 03: Migrate an on-premises PostgreSQL server to Azure Database fo
 - Azure CLI and Azure Cosmos DB SDK
 - pgAdmin 4 and PostgreSQL CLI
 - Azure VPN Client and SSL certificates for migration
-
-For **Exercise 04: Integrate AI functionality into PostgreSQL**:
-- Azure PostgreSQL Flexible Server
-- pgvector, azure_ai, and pg_diskann extensions
-- Azure OpenAI integration for AI queries
-
-For **Exercise 05: Implement generative AI with Azure SQL and REST endpoints**:
-- Azure Subscription (Owner or Contributor permissions)
-- Azure SQL Database (Supports External REST Endpoint Invocation preview feature)
-- Azure OpenAI Resource (GPT-4, text-embedding-ada-002, DALL-E 3 models)
-- Azure AI Content Safety service
-- Visual Studio Code (with SQL extension)
